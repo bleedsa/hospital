@@ -19,6 +19,9 @@ static TAGS: &[&str] = &[
     "you don't know me",
     "whatever hoe",
     "insane asylum",
+    "we don't want your bitch ass",
+    "lesbian slut heaven",
+    "party doll club",
 ];
 
 /* get a random tag out of TAGS */
@@ -34,10 +37,11 @@ pub async fn index() -> Html<String> {
     page! {
         ("index"),
         r#"
-        <h1>badboy hospital</h1>
+        <h1>{title}.</h1>
         <p>{tag}.</p>
         <hr>
         "#,
+        title = (&*CFG).title(),
         tag = tag(),
     }
 }

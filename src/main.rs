@@ -8,7 +8,7 @@ use hospital::{routes, pre::*};
 #[tokio::main]
 async fn main() {
     let cfg = &*CFG;
-    let addr = format!("{}:{}", cfg.ip, cfg.port);
+    let addr = format!("{}:{}", cfg.server.ip, cfg.server.port);
 
     /* create the routes */
     let app = Router::new()
