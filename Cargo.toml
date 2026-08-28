@@ -29,6 +29,11 @@ name = "rm_user"
 test = false
 path = "bin/rm_user.rs"
 
+[[bin]]
+name = "new_board"
+test = false
+path = "bin/new_board.rs"
+
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = "0.8.9"

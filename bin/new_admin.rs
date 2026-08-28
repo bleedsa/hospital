@@ -13,7 +13,7 @@ struct Args {
 
 fn main() -> R<()> {
     let A = Args::parse();
-    let db = Db::new()?;
+    let db = Db::new()?.init()?;
 
     let u = db.get_user_by_name(&A.user)?;
     db.new_admin(u.id)?;

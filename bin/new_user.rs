@@ -15,7 +15,7 @@ struct Args {
 
 fn main() -> R<()> {
     let A = Args::parse();
-    let db = Db::new()?;
+    let db = Db::new()?.init()?;
 
     let u = db.new_user(&A.user, &A.password)?;
     println!("{u:#?}");

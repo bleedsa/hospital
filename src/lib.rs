@@ -14,7 +14,9 @@ pub mod routes;
 pub mod tags;
 
 pub mod pre {
-    pub use crate::{CFG, H, R, err_fmt, fatal, int2bool, page, re, un, err_page};
+    pub use crate::{
+        CFG, H, R, err_fmt, err_page, fatal, int2bool, page, puts, re, un,
+    };
 }
 
 /** `panic!()` but make it not ugly. */
@@ -23,6 +25,20 @@ macro_rules! fatal {
     ($($x:tt),* $(,)*) => {{
         eprintln!($($x),*);
         std::process::exit(-1);
+    }};
+}
+
+/** print a string without a newline */
+#[macro_export]
+macro_rules! puts {
+    ($($x:tt)*) => {{
+        use std::io::{self, Write};
+        print!($($x)*);
+        let _ = io::stdout()
+            .flush()
+            .unwrap_or_else(|e| {
+                $crate::fatal!("failed to flush stdout: {e}")
+            });
     }};
 }
 

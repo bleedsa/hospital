@@ -3,7 +3,7 @@ use axum_cookie::prelude::*;
 use serde::Deserialize;
 use tokio::time::Duration;
 
-use crate::{db::Db, pre::*, passwd};
+use crate::{db::Db, passwd, pre::*};
 
 #[derive(Deserialize)]
 pub struct LoginForm {
@@ -11,6 +11,7 @@ pub struct LoginForm {
     pass: String,
 }
 
+/** login action */
 pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
     /* make a db and get the user from the form */
     let db = Db::new()?;
