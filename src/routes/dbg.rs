@@ -2,10 +2,10 @@ use crate::{db::Db, pre::*};
 use axum::{extract::Path, response::Html};
 
 pub async fn user(Path(id): Path<i64>) -> H<Html<String>> {
-    let db = un!(Db::new(), "/login");
-    let u = un!(db.get_user(id), "/login");
+    let db = un!(Db::new());
+    let u = un!(db.get_user(id));
 
-    Ok(page! {
+    Ok(page!(db, {
         ("user {id}"),
         r#"
         <h1>user {id}</h1>
@@ -32,5 +32,5 @@ pub async fn user(Path(id): Path<i64>) -> H<Html<String>> {
         hash = u.hash,
         bio = u.bio,
         admin = u.admin,
-    })
+    }))
 }

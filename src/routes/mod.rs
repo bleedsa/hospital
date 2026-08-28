@@ -5,8 +5,8 @@ pub mod act;
 pub mod dbg;
 
 /** index/homepage (GET /) */
-pub async fn index() -> Html<String> {
-    page! {
+pub async fn index() -> H<Html<String>> {
+    Ok(page! {
         ("index"),
         r#"
         <h1>{title}.</h1>
@@ -14,11 +14,11 @@ pub async fn index() -> Html<String> {
         "#,
         title = (&*CFG).title(),
         tag = tag(),
-    }
+    })
 }
 
-pub async fn login() -> Html<String> {
-    page! {
+pub async fn login() -> H<Html<String>> {
+    Ok(page! {
         ("login"),
         r#"
         <h1>login.</h1>
@@ -46,5 +46,5 @@ pub async fn login() -> Html<String> {
             </form>
         </div>
         "#
-    }
+    })
 }
