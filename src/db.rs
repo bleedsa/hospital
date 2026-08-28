@@ -1,4 +1,5 @@
 use rusqlite::{Connection, Row, params};
+use axum_cookie::prelude::*;
 
 use crate::{passwd, pre::*, rand::rand_str};
 use std::{fs, path::Path};
@@ -153,6 +154,32 @@ impl Db {
         ));
 
         Ok(self)
+    }
+
+    /** get the current user based on the cookies */
+    pub fn me(&self, c: &CookieManager) -> R<User> {
+        let hash = if let Some(cookie) = c.get("session") {
+            cookie.value().to_string()
+        } else {
+            return err_fmt!("Db::me(): not logged in");
+        };
+
+        let sesh_r = un!(self.sql.prepare(
+            "
+            select * from sessions
+            where hash = ?1
+            "
+        ))
+            .query_map((hash,), Session::new)
+            .map(|mut i| i.next());
+
+        let s = if let Some(s) = un!(sesh_r) {
+            un!(s)
+        } else {
+            err_fmt!("Db::me(): no sessions found for user")?
+        };
+
+        self.get_user(s.user)
     }
 
     /** make a new user with name `n` and password `p` */

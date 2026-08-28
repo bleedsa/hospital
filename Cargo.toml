@@ -38,6 +38,7 @@ path = "bin/new_board.rs"
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = "0.8.9"
 axum-cookie = "0.3.0"
+axum-extra = { version = "0.12.6", features = ["cookie"] }
 clap = { version = "4.6.6", features = ["derive"] }
 rand = "0.10.2"
 rusqlite = "0.40.2"

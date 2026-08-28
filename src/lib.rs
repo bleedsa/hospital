@@ -47,14 +47,17 @@ macro_rules! puts {
 macro_rules! re {
     ($r:expr) => {{ $r.map_err(|e| format!("{e}")) }};
     ($r:expr, $($g:tt)*) => {{
-        $r.map_err(|e| page! {
-            ("error: {e}"),
-            r#"
-            <h1>error: {e}</h1>
-            <p><a href="{goto}">go back</a></p>
-            "#,
-            goto = format!($($g)*),
-        })
+        match $r {
+            r @ Ok(_) => r,
+            Err(e) => Err(page! {
+                ("error: {e}"),
+                r#"
+                <h1>error: {e}</h1>
+                <p><a href="{goto}">go back</a></p>
+                "#,
+                goto = format!($($g)*),
+            })?
+        }
     }};
 }
 

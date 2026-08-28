@@ -24,6 +24,7 @@ async fn main() {
         .route("/login", get(routes::login))
         .route("/act/login", post(routes::act::login))
         .route("/dbg/user/{id}", get(routes::dbg::user))
+        .route("/b/{name}", get(routes::b::by_name))
         .route("/", get(routes::index))
         .layer(CookieLayer::default());
 

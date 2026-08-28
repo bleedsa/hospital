@@ -2,6 +2,7 @@ use crate::{pre::*, tags::tag};
 use axum::response::Html;
 
 pub mod act;
+pub mod b;
 pub mod dbg;
 
 /** index/homepage (GET /) */

@@ -41,10 +41,9 @@ macro_rules! page {
                 .map(|b| format!(
                     r#"
                     <span class="board-a">
-                        <a href="/b/{id}">{name}</a>
+                        <a href="/b/{name}">{name}</a>
                     </span>
                     "#,
-                    id = b.id,
                     name = b.name,
                 ))
                 .collect::<Vec<_>>()
