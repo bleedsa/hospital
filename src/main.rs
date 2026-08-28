@@ -1,4 +1,7 @@
-use axum::{Router, routing::{post, get}};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 use hospital::{pre::*, routes};
 use tokio::net::TcpListener;
 

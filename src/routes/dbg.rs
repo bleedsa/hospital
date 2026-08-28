@@ -1,5 +1,5 @@
-use axum::{response::Html, extract::Path};
-use crate::{pre::*, db::Db};
+use crate::{db::Db, pre::*};
+use axum::{extract::Path, response::Html};
 
 pub async fn user(Path(id): Path<i64>) -> H<Html<String>> {
     let db = un!(Db::new(), "/login");

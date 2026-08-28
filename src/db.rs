@@ -1,7 +1,17 @@
 use rusqlite::{Connection, Row, params};
 
-use crate::{pre::*, passwd};
+use crate::{passwd, pre::*, rand::rand_str};
 use std::{fs, path::Path};
+
+/** a user entry in the database */
+#[derive(Clone, Debug, PartialEq)]
+pub struct User {
+    pub id: i64,
+    pub name: String,
+    pub hash: String,
+    pub bio: String,
+    pub admin: bool,
+}
 
 /** convert a `Row` to a `User` */
 fn row2user<'a>(r: &Row<'a>) -> rusqlite::Result<User> {
@@ -15,14 +25,22 @@ fn row2user<'a>(r: &Row<'a>) -> rusqlite::Result<User> {
     })
 }
 
-/** a user entry in the database */
+/** repr for a session entry */
 #[derive(Clone, Debug, PartialEq)]
-pub struct User {
+pub struct Session {
     pub id: i64,
-    pub name: String,
     pub hash: String,
-    pub bio: String,
-    pub admin: bool,
+    pub user: i64,
+}
+
+impl Session {
+    pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
+        Ok(Session {
+            id: r.get(0)?,
+            hash: r.get(1)?,
+            user: r.get(2)?,
+        })
+    }
 }
 
 pub struct Db {
@@ -45,17 +63,28 @@ impl Db {
         let sql = un!(Connection::open(p));
 
         /* default table query */
-        let q = r#"
-        create table if not exists users (
-            id integer primary key autoincrement,
-            name text not null,
-            hash text not null,
-            admin boolean not null,
-            bio text
-        );
-        "#;
-
-        un!(sql.execute(q, []));
+        for q in [
+            r#"
+            create table if not exists users (
+                id integer primary key autoincrement,
+                name text not null,
+                hash text not null,
+                admin boolean not null,
+                bio text
+            );
+            "#,
+            r#"
+            create table if not exists sessions (
+                id integer primary key autoincrement,
+                hash text not null,
+                user integer not null
+            );
+            "#,
+        ]
+        .into_iter()
+        {
+            un!(sql.execute(q, []));
+        }
         Ok(Self { sql })
     }
 
@@ -91,7 +120,7 @@ impl Db {
             ",
             params![n, h]
         ));
-    
+
         /* get the user back again */
         let r = un!(self.sql.prepare("select * from users where name = ?1"))
             .query_map(&[n], row2user)
@@ -137,34 +166,71 @@ impl Db {
     /** make a user admin by id */
     #[inline(always)]
     pub fn new_admin(&self, id: i64) -> R<()> {
-        re!(self.sql.execute(
-            "
-            update users
-            set admin = 1
-            where id = ?1
-            ",
-            params![id]
-        )
+        re!(self
+            .sql
+            .execute(
+                "
+                update users
+                set admin = 1
+                where id = ?1
+                ",
+                params![id]
+            )
             .map(|_| ()))
     }
 
     /** remove a user by id */
     #[inline(always)]
     pub fn rm_user(&self, id: i64) -> R<()> {
-        re!(self.sql.execute(
+        re!(self
+            .sql
+            .execute(
+                "
+                delete from users
+                where id = ?1
+                ",
+                params![id]
+            )
+            .map(|_| ()))
+    }
+
+    /** make a new session for a user */
+    pub fn new_session(&self, id: i64) -> R<Session> {
+        un!(self.sql.execute(
             "
-            delete from users
+            delete from sessions
             where id = ?1
             ",
-            params![id]
-        )
-            .map(|_| ()))
+            (id,)
+        ));
+
+        /* make a random hash string */
+        let hash = rand_str::<64>()?;
+
+        un!(self.sql.execute(
+            "
+            insert into sessions (hash, user)
+            values (?1, ?2)
+            ",
+            (hash, id),
+        ));
+
+        /* get the session & return */
+        let r = un!(self.sql.prepare("select * from sessions where user = ?1"))
+            .query_map((id,), Session::new)
+            .map(|mut i| i.next());
+
+        if let Some(s) = un!(r) {
+            re!(s)
+        } else {
+            err_fmt!("Db::new_session({id}): session created, but not found")
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{passwd, db::Db};
+    use crate::{db::Db, passwd};
     use std::fs;
 
     fn O(p: &str) -> Db {
@@ -231,5 +297,17 @@ mod test {
 
         db.rm_user(u.id).unwrap();
         assert!(db.get_user(u.id).is_err());
+    }
+
+    #[test]
+    fn mk_session() {
+        let db = O("run/test/mk_session.db");
+
+        let u = db.new_user("skylar", "empty").unwrap();
+        assert_eq!("skylar", &u.name);
+
+        let s = db.new_session(u.id).unwrap();
+        assert_eq!(s.user, u.id);
+        assert_eq!(s.hash.len(), 64);
     }
 }

@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use clap::Parser;
-use hospital::{pre::*, db::Db};
+use hospital::{db::Db, pre::*};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

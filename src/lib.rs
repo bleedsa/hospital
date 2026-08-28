@@ -1,19 +1,20 @@
 #![allow(non_snake_case)]
 
-use serde::Deserialize;
 use axum::response::Html;
+use serde::Deserialize;
 
 use std::{fs, sync::LazyLock};
 
-pub mod tags;
 pub mod css;
 pub mod db;
 pub mod page;
 pub mod passwd;
+pub mod rand;
 pub mod routes;
+pub mod tags;
 
 pub mod pre {
-    pub use crate::{CFG, R, H, err_fmt, fatal, int2bool, page, re, un};
+    pub use crate::{CFG, H, R, err_fmt, fatal, int2bool, page, re, un};
 }
 
 /** `panic!()` but make it not ugly. */
