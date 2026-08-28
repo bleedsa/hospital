@@ -1,14 +1,19 @@
-use axum::{
-    routing::get,
-    Router,
-};
+use axum::{Router, routing::get};
+use hospital::{pre::*, routes};
 use tokio::net::TcpListener;
-use hospital::{routes, pre::*};
+
+use hospital::db::Db;
 
 #[tokio::main]
 async fn main() {
     let cfg = &*CFG;
     let addr = format!("{}:{}", cfg.server.ip, cfg.server.port);
+
+    /* create a database just to run the base CREATE commands */
+    let _ = match Db::new() {
+        Ok(_) => (),
+        Err(e) => fatal!("{e}"),
+    };
 
     /* create the routes */
     let app = Router::new()

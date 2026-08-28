@@ -3,14 +3,17 @@
 use serde::Deserialize;
 use std::{fs, sync::LazyLock};
 
-pub mod page;
-pub mod routes;
 pub mod css;
+pub mod db;
+pub mod page;
+pub mod passwd;
+pub mod routes;
 
 pub mod pre {
-    pub use crate::{page, fatal, CFG, err_fmt, un, re};
+    pub use crate::{CFG, R, err_fmt, fatal, int2bool, page, re, un};
 }
 
+/** `panic!()` but make it not ugly. */
 #[macro_export]
 macro_rules! fatal {
     ($($x:tt),* $(,)*) => {{
@@ -19,24 +22,37 @@ macro_rules! fatal {
     }};
 }
 
+/** re-wrap any `Result` into an `R<T>` */
 #[macro_export]
 macro_rules! re {
-    ($r:expr) => {{
-        $r.map_err(|e| format!("{e}"))
-    }};
+    ($r:expr) => {{ $r.map_err(|e| format!("{e}")) }};
 }
 
+/** unwrap any `Result` into a `T` */
 #[macro_export]
 macro_rules! un {
-    ($r:expr) => {{
-        $crate::re!($r)?
-    }};
+    ($r:expr) => {{ $crate::re!($r)? }};
 }
 
+/** make an `Err(format!($($x)*))`. */
 #[macro_export]
 macro_rules! err_fmt {
     ($($x:tt)*) => {{
         Err(format!($($x)*))
+    }};
+}
+
+/** convert integers into booleans. */
+#[macro_export]
+macro_rules! int2bool {
+    ($($x:expr),* $(,)*) => {{
+        ($(
+            if $x != 0 {
+                true
+            } else {
+                false
+            }
+        ),*)
     }};
 }
 
@@ -46,6 +62,7 @@ pub type R<T> = Result<T, String>;
 pub struct Server {
     pub ip: String,
     pub port: u16,
+    pub db: String,
 }
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]

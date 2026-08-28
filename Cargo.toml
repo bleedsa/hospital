@@ -2,10 +2,34 @@
 name = "hospital"
 version = "0.1.0"
 edition = "2024"
+default-run = "hospital"
+
+[[bin]]
+name = "hospital"
+test = false
+path = "src/main.rs"
+
+[[bin]]
+name = "new_admin"
+test = false
+path = "bin/new_admin.rs"
+
+[[bin]]
+name = "new_user"
+test = false
+path = "bin/new_user.rs"
+
+[[bin]]
+name = "get_user"
+test = false
+path = "bin/get_user.rs"
 
 [dependencies]
+argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = "0.8.9"
+clap = { version = "4.6.6", features = ["derive"] }
 rand = "0.10.2"
+rusqlite = "0.40.2"
 serde = { version = "1.0.229", features = ["derive"] }
 tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 toml = "1.1.4"

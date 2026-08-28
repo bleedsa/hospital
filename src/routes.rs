@@ -1,5 +1,5 @@
-use axum::response::Html;
 use crate::pre::*;
+use axum::response::Html;
 
 /* a collection of taglines for the index page */
 static TAGS: &[&str] = &[
@@ -22,13 +22,61 @@ static TAGS: &[&str] = &[
     "we don't want your bitch ass",
     "lesbian slut heaven",
     "party doll club",
+    "gauche and pedestrian",
+    "intellectuals and computer scientists",
+    "you wouldn't get it anyway",
+    "powered by sqlite",
+    "who fucking cares",
+    "nothing is nothing brah",
+    "banned in the UK",
+    "banned for pornography",
+    "uhh",
+    "why",
+    "heavily optimized",
+    "masked by optimism",
+    "childfree",
+    "everyone's favorite",
+    "im 12",
+    "WARNING: incest",
+    "WARNING: gay people",
+    "WARNING: gay incest",
+    "XXX",
+    "COMPUT3R H4X0RS",
+    "just say you hate me",
+    "women are inevitable",
+    "running smuggled geek bars",
+    "written in rust",
+    "hehe",
+    "ROFL",
+    ":3",
+    "furries and other such degenerates",
+    "hh",
+    "BRUH",
+    "faggots ONLY",
+    "speed demons",
+    "fast and furious",
+    "dry humping",
+    "OK",
+    "cool, bro",
+    "we are young and turnt transexuals",
+    "stealing your car stereo",
+    "got a dip",
+    "can i bum a cig",
+    "chuffing darts",
+    "an actual cult",
+    "i love my wife",
+    "hypersexual since 2016",
+    "im surrounded by philistines",
+    "drugs, sex, and rock & roll",
+    "goooood stuff man",
+    "part-time weed dealers",
 ];
 
 /* get a random tag out of TAGS */
 #[inline(always)]
 fn tag() -> &'static str {
-    let L = TAGS.len() as u8; 
-    let i = rand::random::<u8>() % L;
+    let L = TAGS.len() as u16;
+    let i = rand::random::<u16>() % L;
     TAGS[i as usize]
 }
 

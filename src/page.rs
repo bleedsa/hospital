@@ -1,4 +1,3 @@
-
 /** make an html page */
 #[macro_export]
 macro_rules! page {
@@ -19,7 +18,7 @@ macro_rules! page {
                     <div class="top">
                         <span class="bold">{site_title}</span>
                         ::
-                        <a href="/login">login</a></p>
+                        <a href="/login">login</a>
                     </div>
                     <hr>
                     {body}
