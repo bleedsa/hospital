@@ -24,6 +24,11 @@ name = "get_user"
 test = false
 path = "bin/get_user.rs"
 
+[[bin]]
+name = "rm_user"
+test = false
+path = "bin/rm_user.rs"
+
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = "0.8.9"

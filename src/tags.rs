@@ -1,8 +1,5 @@
-use crate::pre::*;
-use axum::response::Html;
-
-/* a collection of taglines for the index page */
-static TAGS: &[&str] = &[
+/** a collection of taglines for the index page */
+pub static TAGS: &[&str] = &[
     "haven for the huddled masses",
     "padded cell for autistic transexuals",
     "im whatever you want me to be baby",
@@ -72,24 +69,10 @@ static TAGS: &[&str] = &[
     "part-time weed dealers",
 ];
 
-/* get a random tag out of TAGS */
+/** get a random tag out of TAGS */
 #[inline(always)]
-fn tag() -> &'static str {
+pub fn tag() -> &'static str {
     let L = TAGS.len() as u16;
     let i = rand::random::<u16>() % L;
     TAGS[i as usize]
-}
-
-/* index/homepage (GET /) */
-pub async fn index() -> Html<String> {
-    page! {
-        ("index"),
-        r#"
-        <h1>{title}.</h1>
-        <p>{tag}.</p>
-        <hr>
-        "#,
-        title = (&*CFG).title(),
-        tag = tag(),
-    }
 }

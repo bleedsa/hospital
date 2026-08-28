@@ -3,6 +3,7 @@ use rusqlite::{Connection, Row, params};
 use crate::{pre::*, passwd};
 use std::{fs, path::Path};
 
+/** convert a `Row` to a `User` */
 fn row2user<'a>(r: &Row<'a>) -> rusqlite::Result<User> {
     let b: Option<String> = r.get(4)?;
     Ok(User {
@@ -14,6 +15,7 @@ fn row2user<'a>(r: &Row<'a>) -> rusqlite::Result<User> {
     })
 }
 
+/** a user entry in the database */
 #[derive(Clone, Debug, PartialEq)]
 pub struct User {
     pub id: i64,
@@ -62,6 +64,7 @@ impl Db {
         Self::create(&CFG.server.db)
     }
 
+    /** make a new user with name `n` and password `p` */
     pub fn new_user<N, P>(&self, n: N, p: P) -> R<User>
     where
         N: AsRef<str>,
@@ -101,6 +104,7 @@ impl Db {
         }
     }
 
+    /** get a user by id */
     pub fn get_user(&self, id: i64) -> R<User> {
         let r = un!(self.sql.prepare("select * from users where id = ?1"))
             .query_map((id,), row2user)
@@ -113,6 +117,7 @@ impl Db {
         }
     }
 
+    /** get a user by name */
     pub fn get_user_by_name<N>(&self, n: N) -> R<User>
     where
         N: AsRef<str>,
@@ -129,12 +134,26 @@ impl Db {
         }
     }
 
+    /** make a user admin by id */
     #[inline(always)]
     pub fn new_admin(&self, id: i64) -> R<()> {
         re!(self.sql.execute(
             "
             update users
             set admin = 1
+            where id = ?1
+            ",
+            params![id]
+        )
+            .map(|_| ()))
+    }
+
+    /** remove a user by id */
+    #[inline(always)]
+    pub fn rm_user(&self, id: i64) -> R<()> {
+        re!(self.sql.execute(
+            "
+            delete from users
             where id = ?1
             ",
             params![id]
@@ -201,5 +220,16 @@ mod test {
 
         let u = db.get_user(u.id).unwrap();
         assert_eq!(u.admin, true);
+    }
+
+    #[test]
+    fn rm_user() {
+        let db = O("run/test/rm_user.db");
+
+        let u = db.new_user("skylar", "empty").unwrap();
+        assert_eq!("skylar", &u.name);
+
+        db.rm_user(u.id).unwrap();
+        assert!(db.get_user(u.id).is_err());
     }
 }

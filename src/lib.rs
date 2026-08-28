@@ -1,8 +1,11 @@
 #![allow(non_snake_case)]
 
 use serde::Deserialize;
+use axum::response::Html;
+
 use std::{fs, sync::LazyLock};
 
+pub mod tags;
 pub mod css;
 pub mod db;
 pub mod page;
@@ -10,7 +13,7 @@ pub mod passwd;
 pub mod routes;
 
 pub mod pre {
-    pub use crate::{CFG, R, err_fmt, fatal, int2bool, page, re, un};
+    pub use crate::{CFG, R, H, err_fmt, fatal, int2bool, page, re, un};
 }
 
 /** `panic!()` but make it not ugly. */
@@ -26,12 +29,23 @@ macro_rules! fatal {
 #[macro_export]
 macro_rules! re {
     ($r:expr) => {{ $r.map_err(|e| format!("{e}")) }};
+    ($r:expr, $($g:tt)*) => {{
+        $r.map_err(|e| page! {
+            ("error: {e}"),
+            r#"
+            <h1>error: {e}</h1>
+            <p><a href="{goto}">go back</a></p>
+            "#,
+            goto = format!($($g)*),
+        })
+    }};
 }
 
 /** unwrap any `Result` into a `T` */
 #[macro_export]
 macro_rules! un {
     ($r:expr) => {{ $crate::re!($r)? }};
+    ($r:expr, $($g:tt)*) => {{ $crate::re!($r, $($g)*)? }};
 }
 
 /** make an `Err(format!($($x)*))`. */
@@ -56,7 +70,11 @@ macro_rules! int2bool {
     }};
 }
 
+/** a basic result type */
 pub type R<T> = Result<T, String>;
+
+/** an html result type for routes */
+pub type H<T> = Result<T, Html<String>>;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct Server {

@@ -1,4 +1,4 @@
-use axum::{Router, routing::get};
+use axum::{Router, routing::{post, get}};
 use hospital::{pre::*, routes};
 use tokio::net::TcpListener;
 
@@ -17,6 +17,9 @@ async fn main() {
 
     /* create the routes */
     let app = Router::new()
+        .route("/login", get(routes::login))
+        .route("/act/login", post(routes::act::login))
+        .route("/dbg/user/{id}", get(routes::dbg::user))
         .route("/", get(routes::index));
 
     /* bind to the address */
