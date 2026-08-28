@@ -14,7 +14,7 @@ pub mod routes;
 pub mod tags;
 
 pub mod pre {
-    pub use crate::{CFG, H, R, err_fmt, fatal, int2bool, page, re, un};
+    pub use crate::{CFG, H, R, err_fmt, fatal, int2bool, page, re, un, err_page};
 }
 
 /** `panic!()` but make it not ugly. */

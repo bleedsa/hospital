@@ -32,3 +32,19 @@ macro_rules! page {
         ))
     }};
 }
+
+/** make an error page */
+#[macro_export]
+macro_rules! err_page {
+    (($($x:tt)*) => ($($e:tt)*)) => {{
+        let e = format!($($x)*);
+        Err($crate::page! {
+            ("error: {e}"),
+            r#"
+            <h1>error: {e}</h1>
+            <p><a href="{goto}">go back</a></p>
+            "#,
+            goto = format!($($e)*),
+        })
+    }};
+}

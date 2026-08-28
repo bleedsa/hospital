@@ -11,7 +11,6 @@ pub async fn index() -> Html<String> {
         r#"
         <h1>{title}.</h1>
         <p>{tag}.</p>
-        <hr>
         "#,
         title = (&*CFG).title(),
         tag = tag(),

@@ -1,7 +1,9 @@
-use axum::{Form, http::header::HeaderMap, response::Redirect};
+use axum::{Form, response::Redirect};
+use axum_cookie::prelude::*;
 use serde::Deserialize;
+use tokio::time::Duration;
 
-use crate::{db::Db, pre::*};
+use crate::{db::Db, pre::*, passwd};
 
 #[derive(Deserialize)]
 pub struct LoginForm {
@@ -9,15 +11,25 @@ pub struct LoginForm {
     pass: String,
 }
 
-pub async fn login(Form(f): Form<LoginForm>) -> R<(HeaderMap, Redirect)> {
+pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
+    /* make a db and get the user from the form */
     let db = Db::new()?;
     let u = db.get_user_by_name(&f.user)?;
 
-    /* make the redirect. goto the user page */
-    let red = Redirect::to(format!("/dbg/user/{}", u.id).as_ref());
+    /* check the password */
+    if let Err(_) = passwd::verify(&f.pass, &u.hash) {
+        return err_page!(("invalid password for user {}", u.name) => ("/login"));
+    }
 
-    /* make the headers so we can set the session cookie */
-    let headers = HeaderMap::new();
+    /* make a new session */
+    let s = db.new_session(u.id)?;
 
-    Ok((headers, red))
+    /* set the cookie */
+    let mut c = Cookie::new("session", s.hash);
+    c.set_path("/");
+    c.set_max_age(Duration::from_secs(1_000_000));
+    C.add(c);
+
+    /* go back */
+    Ok(Redirect::to("/"))
 }

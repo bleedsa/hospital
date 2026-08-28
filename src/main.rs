@@ -2,6 +2,7 @@ use axum::{
     Router,
     routing::{get, post},
 };
+use axum_cookie::prelude::*;
 use hospital::{pre::*, routes};
 use tokio::net::TcpListener;
 
@@ -23,7 +24,8 @@ async fn main() {
         .route("/login", get(routes::login))
         .route("/act/login", post(routes::act::login))
         .route("/dbg/user/{id}", get(routes::dbg::user))
-        .route("/", get(routes::index));
+        .route("/", get(routes::index))
+        .layer(CookieLayer::default());
 
     /* bind to the address */
     let listener = match TcpListener::bind(&addr).await {

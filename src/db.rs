@@ -3,6 +3,8 @@ use rusqlite::{Connection, Row, params};
 use crate::{passwd, pre::*, rand::rand_str};
 use std::{fs, path::Path};
 
+pub const SESSION_HASH_LEN: usize = 64;
+
 /** a user entry in the database */
 #[derive(Clone, Debug, PartialEq)]
 pub struct User {
@@ -205,7 +207,7 @@ impl Db {
         ));
 
         /* make a random hash string */
-        let hash = rand_str::<64>()?;
+        let hash = rand_str::<SESSION_HASH_LEN>()?;
 
         un!(self.sql.execute(
             "
@@ -226,11 +228,24 @@ impl Db {
             err_fmt!("Db::new_session({id}): session created, but not found")
         }
     }
+
+    /** get a session for a user */
+    pub fn get_session(&self, id: i64) -> R<Session> {
+        let r = un!(self.sql.prepare("select * from sessions where user = ?1"))
+            .query_map((id,), Session::new)
+            .map(|mut i| i.next());
+
+        if let Some(s) = un!(r) {
+            re!(s)
+        } else {
+            err_fmt!("Db::get_session({id}): session not found")
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{db::Db, passwd};
+    use crate::{db::{SESSION_HASH_LEN, Db}, passwd};
     use std::fs;
 
     fn O(p: &str) -> Db {
@@ -308,6 +323,17 @@ mod test {
 
         let s = db.new_session(u.id).unwrap();
         assert_eq!(s.user, u.id);
-        assert_eq!(s.hash.len(), 64);
+        assert_eq!(s.hash.len(), SESSION_HASH_LEN);
+    }
+
+    #[test]
+    fn get_session() {
+        let db = O("run/test/get_session.db");
+        let u = db.new_user("skylar", "empty").unwrap();
+        let s = db.new_session(u.id).unwrap();
+        let s = db.get_session(s.user).unwrap();
+
+        assert_eq!(s.user, u.id);
+        assert_eq!(s.hash.len(), SESSION_HASH_LEN);
     }
 }
