@@ -53,6 +53,7 @@ pub struct Board {
     pub id: i64,
     pub name: String,
     pub desc: String,
+    pub hidden: bool,
 }
 
 impl Board {
@@ -62,6 +63,7 @@ impl Board {
             id: r.get(0)?,
             name: r.get(1)?,
             desc: r.get(2)?,
+            hidden: r.get(3)?,
         })
     }
 }
@@ -136,7 +138,8 @@ impl Db {
             create table if not exists boards (
                 id integer primary key autoincrement,
                 name text not null,
-                desc text not null
+                desc text not null,
+                hidden boolean not null
             );
             "#,
         ]
@@ -387,8 +390,8 @@ impl Db {
         /* perform the insertion */
         un!(self.sql.execute(
             "
-            insert into boards (name, desc)
-            values (?1, ?2)
+            insert into boards (name, desc, hidden)
+            values (?1, ?2, false)
             ",
             (n, d)
         ));
@@ -398,6 +401,24 @@ impl Db {
             r @ Ok(_) => r,
             Err(e) => err_fmt!("Db::new_board('{n}', '{d}'): {e}"),
         }
+    }
+
+    /** hide a board from view */
+    #[inline(always)]
+    pub fn hide_board(&self, id: i64) -> R<Board> {
+        /* verify that the board actually exists */
+        /* TODO: does retrieving the board twice make this too slow? */
+        let _ = self.get_board(id)?;
+        un!(self.sql.execute(
+            "
+            update boards
+            set hidden = true
+            where id = ?1
+            ",
+            (id,)
+        ));
+
+        self.get_board(id)
     }
 }
 
@@ -528,5 +549,13 @@ mod test {
         for (x, y) in zip(Xs, Ys) {
             assert_eq!(x, y);
         }
+    }
+
+    #[test]
+    fn hide_board() {
+        let db = O("run/test/hide_board.db");
+        let b = db.new_board("hidden", "a hidden board").unwrap();
+        let b = db.hide_board(b.id).unwrap();
+        assert!(b.hidden);
     }
 }

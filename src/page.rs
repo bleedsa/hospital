@@ -21,7 +21,9 @@ macro_rules! page {
                 </head>
                 <body>
                     <div class="top">
-                        <span class="bold">{site_title}</span>
+                        <span class="bold">
+                            <a href="/">{site_title}</a>
+                        </span>
                         ::
                         <a href="/login">login</a>
                         ::
