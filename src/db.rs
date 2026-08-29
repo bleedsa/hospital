@@ -8,6 +8,7 @@ use std::{
     fs,
     io::Cursor,
     path::Path,
+    iter::zip,
 };
 
 pub const SESSION_HASH_LEN: usize = 512;
@@ -592,7 +593,22 @@ impl Db {
         ));
 
         let map = un!(r.query_map((board,), Thread::new));
-        map.map(|x| re!(x)).collect()
+        let vec = map.map(|x| re!(x)).collect::<R<Vec<_>>>()?;
+
+        /* sort by which thread has the most recent post */
+        let mut zipped = Vec::new();
+        for t in vec.iter() {
+            let mut times = self.get_posts(t.id)?.into_iter().map(|p| p.time).collect::<Vec<_>>();
+            times.sort();
+            /* safety */
+            if let Some(e) = times.last() {
+                zipped.push((*e, t.clone()));
+            }
+        }
+
+        /* sort by time */
+        zipped.sort_by_key(|(t, _)| *t);
+        Ok(zipped.into_iter().rev().map(|(_, x)| x).collect());
     }
 
     /** make a new thread */
