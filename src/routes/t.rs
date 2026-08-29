@@ -18,7 +18,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         <h2>{name}</h2>
         {back}
         <div class="post-box">
-            <p>#{id}@{time}</p>
+            <p>#{id}::<a href="/u/{uname}">{uname}</a>@{time}</p>
             <div class="base-post">
                 {img}
                 <p class="post-content">{cont}</p>
@@ -62,6 +62,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         "#,
         id = t.id,
         bname = b.name,
+        uname = h!(un!(db.get_user(t.author)).name),
         time = timestamp_to_time(t.time),
         img = if let Some(id) = t.file {
             let f = un!(db.get_file(id), "{goto}");
@@ -72,30 +73,31 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         cont = h!(t.cont),
         posts = un!(db.get_posts(t.id))
             .into_iter()
-            .map(|p| format!(
+            .map(|p| Ok(format!(
                 r#"
                 <div class="post-box" id="{id}">
-                    <p class="bold"><a href="/t/{tid}#{id}">#{id}</a>::{time}</p>
+                    <p class="bold"><a href="/t/{tid}#{id}">#{id}</a>::<a href="/u/{uname}">{uname}</a>@{time}</p>
                     {img}
                     <p class="post-content">{cont}</p>
                 </div>
                 "#,
                 id = p.id,
                 tid = t.id,
+                uname = h!(un!(db.get_user(p.author)).name),
                 time = timestamp_to_time(p.time),
                 cont = h!(p.cont),
                 img = if let Some(id) = p.file {
                     let f = if let Ok(f) = db.get_file(id) {
                         f
                     } else {
-                        return String::new()
+                        return Ok(String::new())
                     };
                     format!(r#"<img src="/i/{}" class="post-img"><br>"#, f.id)
                 } else {
                     String::new()
                 }
-            ))
-            .collect::<String>(),
+            )))
+            .collect::<R<String>>()?,
         back = format!(r#"<p><a href="/b/{}">go back</a></p>"#, b.name),
     }))
 }

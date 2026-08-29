@@ -98,6 +98,7 @@ pub struct Thread {
     pub file: Option<i64>,
     pub board: i64,
     pub time: i64,
+    pub author: i64,
 }
 
 impl Thread {
@@ -111,6 +112,7 @@ impl Thread {
             file: r.get(4)?,
             board: r.get(5)?,
             time: r.get(6)?,
+            author: r.get(7)?,
         })
     }
 }
@@ -124,6 +126,7 @@ pub struct Post {
     pub board: i64,
     pub thread: i64,
     pub time: i64,
+    pub author: i64,
 }
 
 impl Post {
@@ -137,6 +140,7 @@ impl Post {
             board: r.get(4)?,
             thread: r.get(5)?,
             time: r.get(6)?,
+            author: r.get(7)?,
         })
     }
 }
@@ -203,7 +207,8 @@ impl Db {
                 hidden boolean not null,
                 file integer,
                 board integer not null,
-                time integer not null
+                time integer not null,
+                author integer not null
             );
             "#,
             r#"
@@ -220,7 +225,8 @@ impl Db {
                 file integer,
                 board integer not null,
                 thread integer not null,
-                time integer not null
+                time integer not null,
+                author integer not null
             );
             "#,
         ]
@@ -616,6 +622,7 @@ impl Db {
     pub fn new_thread<N, C>(
         &self,
         board: i64,
+        author: i64,
         name: N,
         cont: C,
         file: Option<Bytes>,
@@ -635,10 +642,10 @@ impl Db {
 
         un!(self.sql.execute(
             "
-            insert into threads (name, cont, hidden, file, board, time)
-            values (?1, ?2, ?3, ?4, ?5, ?6)
+            insert into threads (name, cont, hidden, file, board, time, author)
+            values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
             ",
-            (name, cont, false, file.map(|f| f.id), board, time)
+            (name, cont, false, file.map(|f| f.id), board, time, author)
         ));
 
         let r = un!(self.sql.prepare(
@@ -657,7 +664,7 @@ impl Db {
         }
     }
 
-    pub fn new_post<C>(&self, thread: i64, cont: C, file: Option<Bytes>) -> R<Post> 
+    pub fn new_post<C>(&self, thread: i64, author: i64, cont: C, file: Option<Bytes>) -> R<Post> 
     where
         C: AsRef<str>,
     {
@@ -673,10 +680,10 @@ impl Db {
 
         un!(self.sql.execute(
             "
-            insert into posts (cont, hidden, file, board, thread, time)
-            values (?1, ?2, ?3, ?4, ?5, ?6)
+            insert into posts (cont, hidden, file, board, thread, time, author)
+            values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
             ",
-            (cont, false, file, board.id, thread.id, time)
+            (cont, false, file, board.id, thread.id, time, author)
         ));
 
         let r = un!(self.sql.prepare(
@@ -921,9 +928,9 @@ pub mod test {
     #[test]
     fn new_thread() {
         let db = O("run/test/new_thread.db");
-
+        let u = db.new_user("u", "u").unwrap();
         let b = db.new_board("test", "test").unwrap();
-        let t = db.new_thread(b.id, "test", "test", None).unwrap();
+        let t = db.new_thread(b.id, u.id, "test", "test", None).unwrap();
 
         assert_eq!(&t.name, "test");
         assert_eq!(&t.cont, "test");
@@ -934,12 +941,13 @@ pub mod test {
     #[test]
     fn get_threads() {
         let db = O("run/test/get_threads.db");
-
+        let u = db.new_user("u", "u").unwrap();
         let b = db.new_board("test", "test").unwrap();
-        let _ = db.new_thread(b.id, "test", "test", None).unwrap();
+        let _ = db.new_thread(b.id, u.id, "test", "test", None).unwrap();
         let _ = db
             .new_thread(
                 b.id,
+                u.id,
                 "test2",
                 "test",
                 Some(Bytes::copy_from_slice(
@@ -965,10 +973,11 @@ pub mod test {
     #[test]
     fn new_post() {
         let db = O("run/test/new_post.db");
+        let u = db.new_user("test", "test").unwrap();
         let bs = Some(Bytes::copy_from_slice(&include_bytes!("crack_wires.gif").as_slice()));
         let b = db.new_board("test", "test").unwrap();
-        let t = db.new_thread(b.id, "test", "test", bs.clone()).unwrap();
-        let p = db.new_post(t.id, "test post", bs.clone()).unwrap();
+        let t = db.new_thread(b.id, u.id, "test", "test", bs.clone()).unwrap();
+        let p = db.new_post(t.id, u.id, "test post", bs.clone()).unwrap();
         let f = p.file.map(|i| db.get_file(i).unwrap().bytes);
 
         assert_eq!(p.cont, "test post");
@@ -978,9 +987,10 @@ pub mod test {
     #[test]
     fn get_post() {
         let db = O("run/test/get_post.db");
+        let u = db.new_user("test", "test").unwrap();
         let b = db.new_board("test", "test").unwrap();
-        let t = db.new_thread(b.id, "test", "test", None).unwrap();
-        let i = db.new_post(t.id, "test post", None).unwrap().id;
+        let t = db.new_thread(b.id, u.id, "test", "test", None).unwrap();
+        let i = db.new_post(t.id, u.id, "test post", None).unwrap().id;
         let p = db.get_post(i).unwrap();
         assert_eq!(&p.cont, "test post");
         assert_eq!(p.file, None);
@@ -989,10 +999,11 @@ pub mod test {
     #[test]
     fn get_posts() {
         let db = O("run/test/get_posts.db");
+        let u = db.new_user("test", "test").unwrap();
         let b = db.new_board("test", "test").unwrap();
-        let t = db.new_thread(b.id, "test", "test", None).unwrap();
-        let p1 = db.new_post(t.id, "test post", None).unwrap();
-        let p2 = db.new_post(t.id, "test post 2", None).unwrap();
+        let t = db.new_thread(b.id, u.id, "test", "test", None).unwrap();
+        let p1 = db.new_post(t.id, u.id, "test post", None).unwrap();
+        let p2 = db.new_post(t.id, u.id, "test post 2", None).unwrap();
         let [p3, p4] = &db.get_posts(t.id).unwrap()[..] else { panic!("invalid number of posts") };
         assert_eq!(&p1, p3);
         assert_eq!(&p2, p4);

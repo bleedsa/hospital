@@ -6,6 +6,7 @@ pub mod b;
 pub mod dbg;
 pub mod i;
 pub mod t;
+pub mod u;
 
 #[macro_export]
 macro_rules! invalid_str {

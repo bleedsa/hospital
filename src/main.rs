@@ -26,6 +26,7 @@ async fn main() -> R<()> {
         .route("/b/{name}", get(routes::b::by_name))
         .route("/t/{id}", get(routes::t::by_id))
         .route("/i/{id}", get(routes::i::by_id))
+        .route("/u/{name}", get(routes::u::by_name))
         .route("/", get(routes::index))
         .layer(CookieLayer::default());
 

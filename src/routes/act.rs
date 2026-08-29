@@ -47,7 +47,7 @@ pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
 /** make a new post in a thread */
 pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     let db = Db::new()?;
-    let _ = db.me(&C)?;
+    let me = db.me(&C)?;
 
     let map = multipart_to_map(&mut m).await?;
 
@@ -86,7 +86,7 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
         None
     };
 
-    let p = un!(db.new_post(thread.id, &cont, file.cloned()), "{goto}");
+    let p = un!(db.new_post(thread.id, me.id, &cont, file.cloned()), "{goto}");
 
     Ok(Redirect::to(&format!("/t/{}#{}", thread.id, p.id)))
 }
@@ -94,7 +94,7 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
 /** make a new thread */
 pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     let db = Db::new()?;
-    let _ = db.me(&C)?;
+    let me = db.me(&C)?;
 
     let map = multipart_to_map(&mut m).await?;
 
@@ -135,7 +135,7 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     };
 
     let t = un!(
-        db.new_thread(board.id, &name, &cont, file.cloned()),
+        db.new_thread(board.id, me.id, &name, &cont, file.cloned()),
         "{goto}"
     );
 

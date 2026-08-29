@@ -57,17 +57,18 @@ pub async fn by_name<'a>(
         desc = b.desc,
         threads = threads
             .into_iter()
-            .map(|t| format!(
+            .map(|t| Ok(format!(
                 r#"
                 <div class="thread-box">
                     <h3 id="{id}">
-                        <a href="/b/{bname}#{id}">#{id}</a>::<a href="/t/{id}">{name}</a>@<span class="utc">{time}</span>
+                        <a href="/b/{bname}#{id}">#{id}</a>::<a href="/t/{id}">{name}</a>::<a href="/u/{uname}">{uname}</a>@<span class="utc">{time}</span>
                     </h3>
                     <p>{cont}</p>
                 </div>
                 "#,
                 id = t.id,
                 bname = b.name,
+                uname = h!(un!(db.get_user(t.author)).name),
                 name = h!(t.name),
                 time = timestamp_to_time(t.time),
                 cont = {
@@ -80,7 +81,7 @@ pub async fn by_name<'a>(
                     };
                     h!(&t.cont[..z])
                 },
-            ))
-            .collect::<String>(),
+            )))
+            .collect::<R<String>>()?,
     }))
 }
