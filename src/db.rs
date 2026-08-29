@@ -1,9 +1,10 @@
 use axum::body::Bytes;
 use axum_cookie::prelude::*;
 use rusqlite::{Connection, Row, params};
+use image::ImageReader;
 
 use crate::{passwd, pre::*, rand::rand_str};
-use std::{fs, path::Path};
+use std::{fs, path::Path, io::Cursor};
 
 pub const SESSION_HASH_LEN: usize = 512;
 
@@ -474,11 +475,17 @@ impl Db {
 
     /** add a new file to the db */
     pub fn new_file(&self, file: Bytes) -> R<File> {
+        let vec = file.to_vec();
+
+        /* verify that the file is, in fact, an image */
+        let im = un!(ImageReader::new(Cursor::new(&vec)).with_guessed_format());
+        let _ = un!(im.decode());
+
         un!(self.sql.execute(
             "insert into files (bytes)
             values (?1)
             ",
-            (file.to_vec(),)
+            (vec,)
         ));
 
         let r = un!(self.sql.prepare(
@@ -737,12 +744,22 @@ pub mod test {
     }
 
     #[test]
-    fn new_file() {
-        let db = O("run/test/new_file.db");
+    #[should_panic]
+    fn new_invalid_file() {
+        let db = O("run/test/new_invalid_file.db");
         let bs = Bytes::copy_from_slice(b"1234567890abcdef");
         let f = db.new_file(bs.clone()).unwrap();
 
         assert_eq!(Bytes::copy_from_slice(&f.bytes), bs);
+    }
+
+    #[test]
+    fn new_file() {
+        let db = O("run/test/new_file.db");
+        let bs = &include_bytes!("crack_wires.gif").as_slice();
+        let f = db.new_file(Bytes::copy_from_slice(bs)).unwrap();
+
+        assert_eq!(bs, &f.bytes);
     }
 
     #[test]
