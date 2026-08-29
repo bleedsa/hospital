@@ -8,7 +8,6 @@ use std::{
     fs,
     io::Cursor,
     path::Path,
-    iter::zip,
 };
 
 pub const SESSION_HASH_LEN: usize = 512;
@@ -603,12 +602,14 @@ impl Db {
             /* safety */
             if let Some(e) = times.last() {
                 zipped.push((*e, t.clone()));
+            } else {
+                zipped.push((t.time, t.clone()));
             }
         }
 
         /* sort by time */
         zipped.sort_by_key(|(t, _)| *t);
-        Ok(zipped.into_iter().rev().map(|(_, x)| x).collect());
+        Ok(zipped.into_iter().rev().map(|(_, x)| x).collect())
     }
 
     /** make a new thread */
@@ -948,7 +949,7 @@ pub mod test {
             .unwrap();
 
         let ts = db.get_threads(b.id).unwrap();
-        let [t1, t2] = &ts[..] else {
+        let [t2, t1] = &ts[..] else {
             panic!("invalid number of threads")
         };
 
