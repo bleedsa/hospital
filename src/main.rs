@@ -21,8 +21,11 @@ async fn main() -> R<()> {
         .route("/login", get(routes::login))
         .route("/act/login", post(routes::act::login))
         .route("/act/new-thread", post(routes::act::new_thread))
+        .route("/act/new-post", post(routes::act::new_post))
         .route("/dbg/user/{id}", get(routes::dbg::user))
         .route("/b/{name}", get(routes::b::by_name))
+        .route("/t/{id}", get(routes::t::by_id))
+        .route("/i/{id}", get(routes::i::by_id))
         .route("/", get(routes::index))
         .layer(CookieLayer::default());
 

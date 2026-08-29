@@ -1,8 +1,10 @@
 #![allow(non_snake_case)]
 
 use axum::{body::Bytes, extract::Multipart, response::Html};
+use chrono::{DateTime, TimeZone, Utc};
 use serde::Deserialize;
 
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::HashMap, fs, sync::LazyLock};
 
 pub mod css;
@@ -15,7 +17,8 @@ pub mod tags;
 
 pub mod pre {
     pub use crate::{
-        CFG, H, R, err_fmt, err_page, fatal, int2bool, page, puts, re, un,
+        CFG, H, R, err_fmt, err_page, fatal, int2bool, page, puts, re,
+        timestamp_to_time, un, now,
     };
 }
 
@@ -187,4 +190,15 @@ pub async fn multipart_to_map(m: &mut Multipart) -> R<HashMap<String, Bytes>> {
     }
 
     Ok(map)
+}
+
+#[inline(always)]
+pub fn now() -> R<i64> {
+    let start_time = SystemTime::now();
+    Ok(un!(start_time.duration_since(UNIX_EPOCH)).as_secs() as i64)
+}
+
+#[inline(always)]
+pub fn timestamp_to_time(time: i64) -> DateTime<Utc> {
+    Utc.timestamp_opt(time, 0).unwrap()
 }

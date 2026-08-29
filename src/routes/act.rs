@@ -44,8 +44,63 @@ pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
     Ok(Redirect::to("/"))
 }
 
+/** make a new post in a thread */
+pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
+    let db = Db::new()?;
+    let _ = db.me(&C)?;
+
+    let map = multipart_to_map(&mut m).await?;
+
+    /* get string fields as string */
+    let M = |n| -> R<String> {
+        Ok(
+            un!(str::from_utf8(un!(map
+                .get(n)
+                .ok_or(format!("no such field {n}")))))
+            .to_string()
+        )
+    };
+
+    /* grab the thread and board */
+    let thread = un!(M("thread")?.parse::<i64>());
+    let goto = format!("/t/{thread}");
+
+    /* grab the thread and board structs */
+    let thread = un!(db.get_thread(thread), "{goto}");
+    let board = un!(db.get_board(thread.board), "{goto}");
+
+    /* convert other params to str */
+    let cont = M("content")?;
+
+    if invalid_str!(cont, 2048) {
+        return err_page!(("invalid content: {cont}") => ("{goto}"));
+    }
+
+    /* wrap up the file content in an Option */
+    let file = if let Some(f) = map.get("file") {
+        if f.is_empty() {
+            None
+        } else {
+            Some(f)
+        }
+    } else {
+        None
+    };
+
+    let p = un!(db.new_post(thread.id, &cont, file.cloned()), "{goto}");
+
+    Ok(page!(db, {
+        ("created post"),
+        r#"
+        <h1>created post</h1>
+        <p>content: {cont}</p>
+        <p>file: {file:?}</p>
+        "#,
+    }))
+}
+
 /** make a new thread */
-pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
+pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     let db = Db::new()?;
     let _ = db.me(&C)?;
 
@@ -61,7 +116,7 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
         )
     };
 
-    /* board & database setup */
+    /* board setup */
     let board = M("board")?;
     if invalid_str!(board, 32) {
         return err_page!(("board {board} is invalid") => ("/"));
@@ -92,29 +147,5 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
         "{goto}"
     );
 
-    Ok(page!(db, {
-        ("new thread created"),
-        r#"
-        <h1>new thread created</h1>
-        <table>
-            {fields}
-        </table>
-        <h3>{name}</h3>
-        <p>{cont}</p>
-        <p>{file:?}</p>
-        "#,
-        name = t.name,
-        cont = t.cont,
-        file = t.file,
-        fields = map.iter()
-            .map(|(n, v)| format!(
-                "
-                <tr>
-                    <td>{n}</td>
-                    <td>{v:?}</td>
-                </tr>
-                "
-            ))
-            .collect::<String>(),
-    }))
+    Ok(Redirect::to(&format!("/t/{}", t.id)))
 }

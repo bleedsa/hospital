@@ -1,14 +1,17 @@
-use crate::{db::Db, pre::*};
 use axum::{extract::Path, response::Html};
 use axum_cookie::prelude::*;
+
+use crate::{db::Db, pre::*};
 
 pub async fn by_name<'a>(
     Path(n): Path<String>,
     c: CookieManager,
 ) -> H<Html<String>> {
     let db = un!(Db::new(), "/");
-    let me = un!(db.me(&c), "/");
     let b = un!(db.get_board_by_name(&n), "/");
+    let me = un!(db.me(&c), "/b/{}", b.id);
+
+    let threads = un!(db.get_threads(b.id), "/b/{}", b.id);
 
     Ok(page!(db, {
         ("{n} ({}) :: view board", me.name),
@@ -46,8 +49,37 @@ pub async fn by_name<'a>(
                 <input type="submit" value="go">
             </form>
         </div>
-        <hr>
+
+        <div class="threads">
+            {threads}
+        </div>
         "#,
         desc = b.desc,
+        threads = threads
+            .into_iter()
+            .map(|t| format!(
+                r#"
+                <div class="thread-box">
+                    <h3>
+                        <a href="/t/{id}">{name}</a>@<span class="utc">{time}</span>#{id}
+                    </h3>
+                    <p>{cont}</p>
+                </div>
+                "#,
+                id = t.id,
+                name = t.name,
+                time = timestamp_to_time(t.time),
+                cont = {
+                    let L = t.cont.len();
+                    const M: usize = 32;
+                    let z = if L > M {
+                        M
+                    } else {
+                        L
+                    };
+                    &t.cont[..z]
+                },
+            ))
+            .collect::<String>(),
     }))
 }

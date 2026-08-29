@@ -4,6 +4,8 @@ use axum::response::Html;
 pub mod act;
 pub mod b;
 pub mod dbg;
+pub mod i;
+pub mod t;
 
 #[macro_export]
 macro_rules! invalid_str {

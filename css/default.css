@@ -5,3 +5,15 @@ body {
 .bold {
 	font-weight: bold;
 }
+
+.thread-box {
+	border: 1px solid black;
+	padding: 5px;
+	padding-left: 20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.thread-img {
+	max-width: 400px;
+}

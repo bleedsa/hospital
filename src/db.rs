@@ -4,7 +4,11 @@ use image::ImageReader;
 use rusqlite::{Connection, Row, params};
 
 use crate::{passwd, pre::*, rand::rand_str};
-use std::{fs, io::Cursor, path::Path};
+use std::{
+    fs,
+    io::Cursor,
+    path::Path,
+};
 
 pub const SESSION_HASH_LEN: usize = 512;
 
@@ -93,6 +97,7 @@ pub struct Thread {
     pub hidden: bool,
     pub file: Option<i64>,
     pub board: i64,
+    pub time: i64,
 }
 
 impl Thread {
@@ -105,6 +110,33 @@ impl Thread {
             hidden: r.get(3)?,
             file: r.get(4)?,
             board: r.get(5)?,
+            time: r.get(6)?,
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Post {
+    pub id: i64,
+    pub cont: String,
+    pub hidden: bool,
+    pub file: Option<i64>,
+    pub board: i64,
+    pub thread: i64,
+    pub time: i64,
+}
+
+impl Post {
+    #[inline(always)]
+    pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            id: r.get(0)?,
+            cont: r.get(1)?,
+            hidden: r.get(2)?,
+            file: r.get(3)?,
+            board: r.get(4)?,
+            thread: r.get(5)?,
+            time: r.get(6)?,
         })
     }
 }
@@ -170,13 +202,25 @@ impl Db {
                 cont text not null,
                 hidden boolean not null,
                 file integer,
-                board integer not null
+                board integer not null,
+                time integer not null
             );
             "#,
             r#"
             create table if not exists files (
                 id integer primary key autoincrement,
                 bytes blob not null
+            );
+            "#,
+            r#"
+            create table if not exists posts (
+                id integer primary key autoincrement,
+                cont text not null,
+                hidden boolean not null,
+                file integer,
+                board integer not null,
+                thread integer not null,
+                time integer not null
             );
             "#,
         ]
@@ -504,6 +548,23 @@ impl Db {
         }
     }
 
+    pub fn get_file(&self, id: i64) -> R<File> {
+        let r = un!(self.sql.prepare(
+            "
+            select * from files
+            where id = ?1
+            ",
+        ))
+        .query_map((id,), File::new)
+        .map(|mut i| i.next());
+
+        if let Some(f) = un!(r) {
+            re!(f)
+        } else {
+            err_fmt!("file with id {id} not found")
+        }
+    }
+
     /** get a thread by id */
     pub fn get_thread(&self, id: i64) -> R<Thread> {
         let r = un!(self.sql.prepare(
@@ -534,6 +595,7 @@ impl Db {
         N: AsRef<str>,
         C: AsRef<str>,
     {
+        let time = now()?; 
         let name = name.as_ref();
         let cont = cont.as_ref();
         let file = if let Some(b) = file {
@@ -544,10 +606,10 @@ impl Db {
 
         un!(self.sql.execute(
             "
-            insert into threads (name, cont, hidden, file, board)
-            values (?1, ?2, ?3, ?4, ?5)
+            insert into threads (name, cont, hidden, file, board, time)
+            values (?1, ?2, ?3, ?4, ?5, ?6)
             ",
-            (name, cont, false, file.map(|f| f.id), board)
+            (name, cont, false, file.map(|f| f.id), board, time)
         ));
 
         let r = un!(self.sql.prepare(
@@ -563,6 +625,44 @@ impl Db {
             re!(t)
         } else {
             err_fmt!("Db::new_thread(): thread created, but not found")
+        }
+    }
+
+    pub fn new_post<C>(&self, thread: i64, cont: C, file: Option<Bytes>) -> R<Post> 
+    where
+        C: AsRef<str>,
+    {
+        let time = now()?;
+        let cont = cont.as_ref();
+        let file = if let Some(b) = file {
+            Some(self.new_file(b)?.id)
+        } else {
+            None
+        };
+        let thread = self.get_thread(thread)?;
+        let board = self.get_board(thread.board)?;
+
+        un!(self.sql.execute(
+            "
+            insert into posts (cont, hidden, file, board, thread, time)
+            values (?1, ?2, ?3, ?4, ?5, ?6)
+            ",
+            (cont, false, file, board.id, thread.id, time)
+        ));
+
+        let r = un!(self.sql.prepare(
+            "
+            select * from posts
+            where id = LAST_INSERT_ROWID()
+            "
+        ))
+            .query_map((), Post::new)
+            .map(|mut i| i.next());
+
+        if let Some(p) = un!(r) {
+            re!(p)
+        } else {
+            err_fmt!("Db::new_post(): post created, but not found")
         }
     }
 
@@ -803,7 +903,9 @@ pub mod test {
             .unwrap();
 
         let ts = db.get_threads(b.id).unwrap();
-        let [t1, t2] = &ts[..] else { panic!("invalid number of threads") };
+        let [t1, t2] = &ts[..] else {
+            panic!("invalid number of threads")
+        };
 
         assert_eq!(&t1.name, "test");
         assert_eq!(&t1.cont, "test");
@@ -812,5 +914,18 @@ pub mod test {
         assert_eq!(&t2.name, "test2");
         assert_eq!(&t2.cont, "test");
         assert!(t2.file.is_some());
+    }
+
+    #[test]
+    fn new_post() {
+        let db = O("run/test/new_post.db");
+        let bs = Some(Bytes::copy_from_slice(&include_bytes!("crack_wires.gif").as_slice()));
+        let b = db.new_board("test", "test").unwrap();
+        let t = db.new_thread(b.id, "test", "test", bs.clone()).unwrap();
+        let p = db.new_post(t.id, "test post", bs.clone()).unwrap();
+        let f = p.file.map(|i| db.get_file(i).unwrap().bytes);
+
+        assert_eq!(p.cont, "test post");
+        assert_eq!(f, bs.map(|b| b.to_vec()));
     }
 }
