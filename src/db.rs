@@ -4,11 +4,7 @@ use image::ImageReader;
 use rusqlite::{Connection, Row, params};
 
 use crate::{passwd, pre::*, rand::rand_str};
-use std::{
-    fs,
-    io::Cursor,
-    path::Path,
-};
+use std::{fs, io::Cursor, path::Path};
 
 pub const SESSION_HASH_LEN: usize = 512;
 
@@ -588,7 +584,7 @@ impl Db {
             err_fmt!("Db::get_thread({id}): thread not found")
         }
     }
- 
+
     pub fn get_threads(&self, board: i64) -> R<Vec<Thread>> {
         let mut r = un!(self.sql.prepare(
             "
@@ -603,7 +599,11 @@ impl Db {
         /* sort by which thread has the most recent post */
         let mut zipped = Vec::new();
         for t in vec.iter() {
-            let mut times = self.get_posts(t.id)?.into_iter().map(|p| p.time).collect::<Vec<_>>();
+            let mut times = self
+                .get_posts(t.id)?
+                .into_iter()
+                .map(|p| p.time)
+                .collect::<Vec<_>>();
             times.sort();
             /* safety */
             if let Some(e) = times.last() {
@@ -631,7 +631,7 @@ impl Db {
         N: AsRef<str>,
         C: AsRef<str>,
     {
-        let time = now()?; 
+        let time = now()?;
         let name = name.as_ref();
         let cont = cont.as_ref();
         let file = if let Some(b) = file {
@@ -664,7 +664,13 @@ impl Db {
         }
     }
 
-    pub fn new_post<C>(&self, thread: i64, author: i64, cont: C, file: Option<Bytes>) -> R<Post> 
+    pub fn new_post<C>(
+        &self,
+        thread: i64,
+        author: i64,
+        cont: C,
+        file: Option<Bytes>,
+    ) -> R<Post>
     where
         C: AsRef<str>,
     {
@@ -692,8 +698,8 @@ impl Db {
             where id = LAST_INSERT_ROWID()
             "
         ))
-            .query_map((), Post::new)
-            .map(|mut i| i.next());
+        .query_map((), Post::new)
+        .map(|mut i| i.next());
 
         if let Some(p) = un!(r) {
             re!(p)
@@ -709,8 +715,8 @@ impl Db {
             where id = ?1
             "
         ))
-            .query_map((id,), Post::new)
-            .map(|mut i| i.next());
+        .query_map((id,), Post::new)
+        .map(|mut i| i.next());
 
         if let Some(p) = un!(r) {
             re!(p)
@@ -731,7 +737,7 @@ impl Db {
         map.map(|x| re!(x)).collect()
     }
 
-    pub fn update_bio<B>(&self, id: i64, bio: B) -> R<()> 
+    pub fn update_bio<B>(&self, id: i64, bio: B) -> R<()>
     where
         B: AsRef<str>,
     {
@@ -1011,9 +1017,13 @@ pub mod test {
     fn new_post() {
         let db = O("run/test/new_post.db");
         let u = db.new_user("test", "test").unwrap();
-        let bs = Some(Bytes::copy_from_slice(&include_bytes!("crack_wires.gif").as_slice()));
+        let bs = Some(Bytes::copy_from_slice(
+            &include_bytes!("crack_wires.gif").as_slice(),
+        ));
         let b = db.new_board("test", "test").unwrap();
-        let t = db.new_thread(b.id, u.id, "test", "test", bs.clone()).unwrap();
+        let t = db
+            .new_thread(b.id, u.id, "test", "test", bs.clone())
+            .unwrap();
         let p = db.new_post(t.id, u.id, "test post", bs.clone()).unwrap();
         let f = p.file.map(|i| db.get_file(i).unwrap().bytes);
 
@@ -1041,7 +1051,9 @@ pub mod test {
         let t = db.new_thread(b.id, u.id, "test", "test", None).unwrap();
         let p1 = db.new_post(t.id, u.id, "test post", None).unwrap();
         let p2 = db.new_post(t.id, u.id, "test post 2", None).unwrap();
-        let [p3, p4] = &db.get_posts(t.id).unwrap()[..] else { panic!("invalid number of posts") };
+        let [p3, p4] = &db.get_posts(t.id).unwrap()[..] else {
+            panic!("invalid number of posts")
+        };
         assert_eq!(&p1, p3);
         assert_eq!(&p2, p4);
     }

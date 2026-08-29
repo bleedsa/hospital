@@ -1,8 +1,4 @@
-use axum::{
-    Form,
-    extract::Multipart,
-    response::Redirect,
-};
+use axum::{Form, extract::Multipart, response::Redirect};
 use axum_cookie::prelude::*;
 use serde::Deserialize;
 use tokio::time::Duration;
@@ -53,12 +49,10 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
 
     /* get string fields as string */
     let M = |n| -> R<String> {
-        Ok(
-            un!(str::from_utf8(un!(map
-                .get(n)
-                .ok_or(format!("no such field {n}")))))
-            .to_string()
-        )
+        Ok(un!(str::from_utf8(un!(map
+            .get(n)
+            .ok_or(format!("no such field {n}")))))
+        .to_string())
     };
 
     /* grab the thread and board */
@@ -71,22 +65,25 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     /* convert other params to str */
     let cont = M("content")?;
 
-    if invalid_str!(cont, 2048) {
-        return err_page!(("invalid content: {cont}") => ("{goto}"));
+    if cont.len() > 2048 {
+        return err_page!(
+            ("invalid content: post content must not exceed 2048 chars")
+            =>
+            ("{goto}")
+        );
     }
 
     /* wrap up the file content in an Option */
     let file = if let Some(f) = map.get("file") {
-        if f.is_empty() {
-            None
-        } else {
-            Some(f)
-        }
+        if f.is_empty() { None } else { Some(f) }
     } else {
         None
     };
 
-    let p = un!(db.new_post(thread.id, me.id, &cont, file.cloned()), "{goto}");
+    let p = un!(
+        db.new_post(thread.id, me.id, &cont, file.cloned()),
+        "{goto}"
+    );
 
     Ok(Redirect::to(&format!("/t/{}#{}", thread.id, p.id)))
 }
@@ -148,7 +145,10 @@ pub struct UpdateUserForm {
     pub pass: String,
 }
 
-pub async fn update_user(C: CookieManager, Form(f): Form<UpdateUserForm>) -> H<Redirect> {
+pub async fn update_user(
+    C: CookieManager,
+    Form(f): Form<UpdateUserForm>,
+) -> H<Redirect> {
     let db = Db::new()?;
     let me = db.me(&C)?;
     let goto = format!("/u/{}", me.name);
