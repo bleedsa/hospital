@@ -747,10 +747,10 @@ pub mod test {
     #[should_panic]
     fn new_invalid_file() {
         let db = O("run/test/new_invalid_file.db");
-        let bs = Bytes::copy_from_slice(b"1234567890abcdef");
-        let f = db.new_file(bs.clone()).unwrap();
+        let bs = &include_bytes!("db.rs").as_slice();
+        let f = db.new_file(Bytes::copy_from_slice(bs)).unwrap();
 
-        assert_eq!(Bytes::copy_from_slice(&f.bytes), bs);
+        assert_eq!(&f.bytes, bs);
     }
 
     #[test]
