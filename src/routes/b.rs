@@ -79,7 +79,7 @@ pub async fn by_name<'a>(
                     } else {
                         L
                     };
-                    h!(&t.cont[..z])
+                    format!("{}{}", h!(&t.cont[..z]), if z == M { "..." } else { "" })
                 },
             )))
             .collect::<R<String>>()?,
