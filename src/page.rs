@@ -38,7 +38,7 @@ macro_rules! page {
             title = format!($($t)*),
             body = format!($($b)*),
             css = css(),
-            boards = $db.get_boards()?
+            boards = $db.get_visible_boards()?
                 .into_iter()
                 .map(|b| format!(
                     r#"

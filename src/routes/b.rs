@@ -1,8 +1,11 @@
-use crate::{pre::*, db::Db};
+use crate::{db::Db, pre::*};
 use axum::{extract::Path, response::Html};
 use axum_cookie::prelude::*;
 
-pub async fn by_name<'a>(Path(n): Path<String>, c: CookieManager) -> H<Html<String>> {
+pub async fn by_name<'a>(
+    Path(n): Path<String>,
+    c: CookieManager,
+) -> H<Html<String>> {
     let db = un!(Db::new(), "/");
     let me = un!(db.me(&c), "/");
     let b = un!(db.get_board_by_name(&n), "/");

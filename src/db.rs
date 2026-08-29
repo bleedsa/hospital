@@ -1,5 +1,5 @@
-use rusqlite::{Connection, Row, params};
 use axum_cookie::prelude::*;
+use rusqlite::{Connection, Row, params};
 
 use crate::{passwd, pre::*, rand::rand_str};
 use std::{fs, path::Path};
@@ -173,8 +173,8 @@ impl Db {
             where hash = ?1
             "
         ))
-            .query_map((hash,), Session::new)
-            .map(|mut i| i.next());
+        .query_map((hash,), Session::new)
+        .map(|mut i| i.next());
 
         let s = if let Some(s) = un!(sesh_r) {
             un!(s)
@@ -373,6 +373,20 @@ impl Db {
         map.map(|x| x.map_err(|e| format!("{e}"))).collect()
     }
 
+    /** simple subroutine to iterate visible boards */
+    #[inline(always)]
+    pub fn get_visible_boards(&self) -> R<Vec<Board>> {
+        let mut stm = un!(self.sql.prepare(
+            "
+            select * from boards
+            where not hidden
+            "
+        ));
+
+        let map = un!(stm.query_map((), Board::new));
+        map.map(|x| re!(x)).collect()
+    }
+
     /** create a new board */
     pub fn new_board<N, D>(&self, n: N, d: D) -> R<Board>
     where
@@ -423,14 +437,14 @@ impl Db {
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use crate::{
         db::{Db, SESSION_HASH_LEN},
         passwd,
     };
     use std::{fs, iter::zip};
 
-    fn O(p: &str) -> Db {
+    pub fn O(p: &str) -> Db {
         if fs::exists(p).unwrap() {
             fs::remove_file(p).unwrap();
         }
@@ -557,5 +571,31 @@ mod test {
         let b = db.new_board("hidden", "a hidden board").unwrap();
         let b = db.hide_board(b.id).unwrap();
         assert!(b.hidden);
+    }
+
+    #[test]
+    fn visible_boards() {
+        let db = O("run/test/page/visible_boards.db");
+
+        /* generate some boards */
+        for (n, h) in [
+            ("f", false),
+            ("g", false),
+            ("h", true),
+            ("i", false),
+            ("j", true),
+        ]
+        .into_iter()
+        {
+            let b = db.new_board(n, n).unwrap();
+            if h {
+                db.hide_board(b.id).unwrap();
+            }
+        }
+
+        let bs = db.get_visible_boards().unwrap();
+        for b in bs {
+            assert!(!b.hidden);
+        }
     }
 }
