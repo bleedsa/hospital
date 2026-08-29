@@ -14,6 +14,7 @@ pub mod passwd;
 pub mod rand;
 pub mod routes;
 pub mod tags;
+pub mod js;
 
 pub mod pre {
     pub use crate::{

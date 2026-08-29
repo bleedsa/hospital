@@ -8,7 +8,7 @@ macro_rules! page {
 
     ($db:expr, { ($($t:tt)*), $($b:tt)* }) => {{
         use axum::response::Html;
-        use $crate::{pre::*, css::css};
+        use $crate::{pre::*, css::css, js};
 
         Html(format!(
             r#"
@@ -32,12 +32,14 @@ macro_rules! page {
                     <hr>
                     {body}
                 </body>
+                <script>{js}</script>
             </html>
             "#,
             site_title = (&*CFG).title(),
             title = format!($($t)*),
             body = format!($($b)*),
             css = css(),
+            js = js::base(),
             boards = $db.get_visible_boards()?
                 .into_iter()
                 .map(|b| format!(
