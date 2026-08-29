@@ -141,3 +141,29 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Redirect> {
 
     Ok(Redirect::to(&format!("/t/{}", t.id)))
 }
+
+#[derive(Deserialize)]
+pub struct UpdateUserForm {
+    pub bio: String,
+    pub pass: String,
+}
+
+pub async fn update_user(C: CookieManager, Form(f): Form<UpdateUserForm>) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+    let goto = format!("/u/{}", me.name);
+
+    if f.bio.len() > 1024 || f.pass.len() > 64 {
+        return err_page!(("invalid user fields") => ("{goto}"));
+    }
+
+    if !f.bio.is_empty() {
+        db.update_bio(me.id, &f.bio)?;
+    }
+
+    if !f.pass.is_empty() {
+        db.update_pass(me.id, &f.pass)?;
+    }
+
+    Ok(Redirect::to(&goto))
+}

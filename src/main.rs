@@ -22,6 +22,7 @@ async fn main() -> R<()> {
         .route("/act/login", post(routes::act::login))
         .route("/act/new-thread", post(routes::act::new_thread))
         .route("/act/new-post", post(routes::act::new_post))
+        .route("/act/update-user", post(routes::act::update_user))
         .route("/dbg/user/{id}", get(routes::dbg::user))
         .route("/b/{name}", get(routes::b::by_name))
         .route("/t/{id}", get(routes::t::by_id))

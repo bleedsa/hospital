@@ -730,6 +730,43 @@ impl Db {
         let map = un!(r.query_map((thread,), Post::new));
         map.map(|x| re!(x)).collect()
     }
+
+    pub fn update_bio<B>(&self, id: i64, bio: B) -> R<()> 
+    where
+        B: AsRef<str>,
+    {
+        let bio = bio.as_ref();
+
+        un!(self.sql.execute(
+            "
+            update users
+            set bio = ?1
+            where id = ?2
+            ",
+            (bio, id)
+        ));
+
+        Ok(())
+    }
+
+    pub fn update_pass<P>(&self, id: i64, pass: P) -> R<()>
+    where
+        P: AsRef<str>,
+    {
+        let pass = pass.as_ref();
+        let hash = passwd::hash(pass)?;
+
+        un!(self.sql.execute(
+            "
+            update users
+            set hash = ?1
+            where id = ?2
+            ",
+            (hash, id)
+        ));
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -1007,5 +1044,19 @@ pub mod test {
         let [p3, p4] = &db.get_posts(t.id).unwrap()[..] else { panic!("invalid number of posts") };
         assert_eq!(&p1, p3);
         assert_eq!(&p2, p4);
+    }
+
+    #[test]
+    fn update_user_creds() {
+        let db = O("run/test/update_user_creds.db");
+        let u = db.new_user("test", "test").unwrap();
+        db.update_bio(u.id, "nonempty bio").unwrap();
+        let u = db.get_user(u.id).unwrap();
+        assert_eq!(&u.bio, "nonempty bio");
+
+        let u = db.new_user("test2", "test").unwrap();
+        db.update_pass(u.id, "password123").unwrap();
+        let u = db.get_user(u.id).unwrap();
+        assert!(passwd::verify("password123", u.hash).unwrap());
     }
 }
