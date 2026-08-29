@@ -3,7 +3,7 @@ pub static TAGS: &[&str] = &[
     "haven for the huddled masses",
     "padded cell for autistic transexuals",
     "im whatever you want me to be baby",
-    "who are you, man?",
+    "who are you, man",
     "what lol",
     "SHUT THE FUCK UP",
     "powered by manic psychosis",
@@ -67,6 +67,16 @@ pub static TAGS: &[&str] = &[
     "drugs, sex, and rock & roll",
     "goooood stuff man",
     "part-time weed dealers",
+    "sup brah",
+    "we do not exist",
+    "based on sound principles",
+    "ACID compliant",
+    "the backend of this website is not fucked up",
+    "smoking 3,000 cigarettes",
+    "lol ok girl",
+    "WARNING: rampant transgenderism",
+    "rewritten in rust",
+    "NOT 4chan",
 ];
 
 /** get a random tag out of TAGS */
