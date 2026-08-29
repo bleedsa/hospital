@@ -1,10 +1,10 @@
 use axum::body::Bytes;
 use axum_cookie::prelude::*;
-use rusqlite::{Connection, Row, params};
 use image::ImageReader;
+use rusqlite::{Connection, Row, params};
 
 use crate::{passwd, pre::*, rand::rand_str};
-use std::{fs, path::Path, io::Cursor};
+use std::{fs, io::Cursor, path::Path};
 
 pub const SESSION_HASH_LEN: usize = 512;
 
@@ -542,7 +542,6 @@ impl Db {
             None
         };
 
-        puts!("making new thread {name}...");
         un!(self.sql.execute(
             "
             insert into threads (name, cont, hidden, file, board)
@@ -550,7 +549,6 @@ impl Db {
             ",
             (name, cont, false, file.map(|f| f.id), board)
         ));
-        println!("ok");
 
         let r = un!(self.sql.prepare(
             "
@@ -566,6 +564,18 @@ impl Db {
         } else {
             err_fmt!("Db::new_thread(): thread created, but not found")
         }
+    }
+
+    pub fn get_threads(&self, board: i64) -> R<Vec<Thread>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from threads
+            where board = ?1
+            "
+        ));
+
+        let map = un!(r.query_map((board,), Thread::new));
+        map.map(|x| re!(x)).collect()
     }
 }
 
@@ -773,5 +783,34 @@ pub mod test {
         assert_eq!(&t.cont, "test");
         assert_eq!(t.hidden, false);
         assert_eq!(t.file, None);
+    }
+
+    #[test]
+    fn get_threads() {
+        let db = O("run/test/get_threads.db");
+
+        let b = db.new_board("test", "test").unwrap();
+        let _ = db.new_thread(b.id, "test", "test", None).unwrap();
+        let _ = db
+            .new_thread(
+                b.id,
+                "test2",
+                "test",
+                Some(Bytes::copy_from_slice(
+                    &include_bytes!("crack_wires.gif").as_slice(),
+                )),
+            )
+            .unwrap();
+
+        let ts = db.get_threads(b.id).unwrap();
+        let [t1, t2] = &ts[..] else { panic!("invalid number of threads") };
+
+        assert_eq!(&t1.name, "test");
+        assert_eq!(&t1.cont, "test");
+        assert_eq!(t1.file, None);
+
+        assert_eq!(&t2.name, "test2");
+        assert_eq!(&t2.cont, "test");
+        assert!(t2.file.is_some());
     }
 }

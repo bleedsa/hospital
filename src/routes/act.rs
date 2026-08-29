@@ -81,7 +81,11 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
     }
 
     /* get file bytes */
-    let file = map.get("file");
+    let file = if let Some(f) = map.get("file") {
+        if f.is_empty() { None } else { Some(f) }
+    } else {
+        None
+    };
 
     let t = un!(
         db.new_thread(board.id, &name, &cont, file.cloned()),
