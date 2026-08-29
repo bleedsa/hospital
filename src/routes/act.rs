@@ -1,7 +1,7 @@
 use axum::{
     Form,
     extract::Multipart,
-    response::{Html, Redirect},
+    response::Redirect,
 };
 use axum_cookie::prelude::*;
 use serde::Deserialize;
@@ -45,7 +45,7 @@ pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
 }
 
 /** make a new post in a thread */
-pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
+pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     let db = Db::new()?;
     let _ = db.me(&C)?;
 
@@ -67,7 +67,6 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
 
     /* grab the thread and board structs */
     let thread = un!(db.get_thread(thread), "{goto}");
-    let board = un!(db.get_board(thread.board), "{goto}");
 
     /* convert other params to str */
     let cont = M("content")?;
@@ -89,14 +88,7 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
 
     let p = un!(db.new_post(thread.id, &cont, file.cloned()), "{goto}");
 
-    Ok(page!(db, {
-        ("created post"),
-        r#"
-        <h1>created post</h1>
-        <p>content: {cont}</p>
-        <p>file: {file:?}</p>
-        "#,
-    }))
+    Ok(Redirect::to(&format!("/t/{}#{}", thread.id, p.id)))
 }
 
 /** make a new thread */

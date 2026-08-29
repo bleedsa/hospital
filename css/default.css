@@ -10,10 +10,20 @@ body {
 	border: 1px solid black;
 	padding: 5px;
 	padding-left: 20px;
+	padding-right: 20px;
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
 
 .thread-img {
 	max-width: 400px;
+}
+
+.post-box {
+	border: 1px solid black;
+	padding: 5px;
+	padding-left: 20px;
+	padding-right: 20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 }

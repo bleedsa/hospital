@@ -60,13 +60,14 @@ pub async fn by_name<'a>(
             .map(|t| format!(
                 r#"
                 <div class="thread-box">
-                    <h3>
-                        <a href="/t/{id}">{name}</a>@<span class="utc">{time}</span>#{id}
+                    <h3 id="{id}">
+                        <a href="/b/{bid}#{id}">#{id}</a>::a href="/t/{id}">{name}</a>@<span class="utc">{time}</span>
                     </h3>
                     <p>{cont}</p>
                 </div>
                 "#,
                 id = t.id,
+                bid = b.id,
                 name = t.name,
                 time = timestamp_to_time(t.time),
                 cont = {

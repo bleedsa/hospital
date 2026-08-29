@@ -48,6 +48,10 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                 <input type="submit" value="go">
             </form>
         </div>
+
+        <div class="posts">
+            {posts}
+        </div>
         "#,
         id = t.id,
         time = timestamp_to_time(t.time),
@@ -58,5 +62,20 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
             "".to_string()
         },
         cont = t.cont,
+        posts = un!(db.get_posts(t.id))
+            .into_iter()
+            .map(|p| format!(
+                r#"
+                <div class="post-box" id="{id}">
+                    <p class="bold"><a href="/t/{tid}#{id}">#{id}</a>::{time}</p>
+                    <p class="post-content">{cont}</p>
+                </div>
+                "#,
+                id = p.id,
+                tid = t.id,
+                time = timestamp_to_time(p.time),
+                cont = p.cont,
+            ))
+            .collect::<String>(),
     }))
 }

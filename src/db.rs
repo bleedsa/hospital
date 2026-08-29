@@ -561,7 +561,7 @@ impl Db {
         if let Some(f) = un!(r) {
             re!(f)
         } else {
-            err_fmt!("file with id {id} not found")
+            err_fmt!("Db::get_file({id}): file not found")
         }
     }
 
@@ -581,6 +581,18 @@ impl Db {
         } else {
             err_fmt!("Db::get_thread({id}): thread not found")
         }
+    }
+ 
+    pub fn get_threads(&self, board: i64) -> R<Vec<Thread>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from threads
+            where board = ?1
+            "
+        ));
+
+        let map = un!(r.query_map((board,), Thread::new));
+        map.map(|x| re!(x)).collect()
     }
 
     /** make a new thread */
@@ -666,15 +678,32 @@ impl Db {
         }
     }
 
-    pub fn get_threads(&self, board: i64) -> R<Vec<Thread>> {
+    pub fn get_post(&self, id: i64) -> R<Post> {
+        let r = un!(self.sql.prepare(
+            "
+            select * from posts
+            where id = ?1
+            "
+        ))
+            .query_map((id,), Post::new)
+            .map(|mut i| i.next());
+
+        if let Some(p) = un!(r) {
+            re!(p)
+        } else {
+            err_fmt!("Db::get_post({id}): post not found")
+        }
+    }
+
+    pub fn get_posts(&self, thread: i64) -> R<Vec<Post>> {
         let mut r = un!(self.sql.prepare(
             "
-            select * from threads
-            where board = ?1
+            select * from posts
+            where thread = ?1
             "
         ));
 
-        let map = un!(r.query_map((board,), Thread::new));
+        let map = un!(r.query_map((thread,), Post::new));
         map.map(|x| re!(x)).collect()
     }
 }
@@ -927,5 +956,28 @@ pub mod test {
 
         assert_eq!(p.cont, "test post");
         assert_eq!(f, bs.map(|b| b.to_vec()));
+    }
+
+    #[test]
+    fn get_post() {
+        let db = O("run/test/get_post.db");
+        let b = db.new_board("test", "test").unwrap();
+        let t = db.new_thread(b.id, "test", "test", None).unwrap();
+        let i = db.new_post(t.id, "test post", None).unwrap().id;
+        let p = db.get_post(i).unwrap();
+        assert_eq!(&p.cont, "test post");
+        assert_eq!(p.file, None);
+    }
+
+    #[test]
+    fn get_posts() {
+        let db = O("run/test/get_posts.db");
+        let b = db.new_board("test", "test").unwrap();
+        let t = db.new_thread(b.id, "test", "test", None).unwrap();
+        let p1 = db.new_post(t.id, "test post", None).unwrap();
+        let p2 = db.new_post(t.id, "test post 2", None).unwrap();
+        let [p3, p4] = &db.get_posts(t.id).unwrap()[..] else { panic!("invalid number of posts") };
+        assert_eq!(&p1, p3);
+        assert_eq!(&p2, p4);
     }
 }
