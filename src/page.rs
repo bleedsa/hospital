@@ -43,13 +43,13 @@ macro_rules! page {
                 .map(|b| format!(
                     r#"
                     <span class="board-a">
-                        <a href="/b/{name}">{name}</a>
+                        <a href="/b/{name}">/{name}/</a>
                     </span>
                     "#,
                     name = b.name,
                 ))
                 .collect::<Vec<_>>()
-                .join("/")
+                .join("\\")
         ))
     }};
 }

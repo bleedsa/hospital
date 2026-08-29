@@ -8,12 +8,15 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
     let _ = db.me(&C)?;
     let t = db.get_thread(id)?;
     let goto = format!("/b/{}", t.board);
+    let b = un!(db.get_board(t.board), "{goto}");
     let name = &t.name;
 
     Ok(page!(db, {
         ("{name}"),
         r#"
-        <h1>{name}</h1>
+        <h1><a href="/b/{bname}">/{bname}/</a></h1>
+        <h2>{name}</h2>
+        {back}
         <div class="post-box">
             <p>#{id}@{time}</p>
             <div class="base-post">
@@ -53,8 +56,12 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                 <input type="submit" value="go">
             </form>
         </div>
+    
+        <hr>
+        {back}
         "#,
         id = t.id,
+        bname = b.name,
         time = timestamp_to_time(t.time),
         img = if let Some(id) = t.file {
             let f = un!(db.get_file(id), "{goto}");
@@ -89,5 +96,6 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                 }
             ))
             .collect::<String>(),
+        back = format!(r#"<p><a href="/b/{}">go back</a></p>"#, b.name),
     }))
 }
