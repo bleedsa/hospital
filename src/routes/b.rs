@@ -30,8 +30,11 @@ pub async fn by_name<'a>(
                     <tr>
                         <td>content</td>
                         <td>
-                            <textarea name="content" rows="3" cols="30">
-                            </textarea>
+                            <textarea
+                                name="content"
+                                rows="3"
+                                cols="30"
+                            ></textarea>
                         </td>
                     </tr>
                     <tr>

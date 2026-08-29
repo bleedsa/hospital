@@ -8,7 +8,6 @@ use serde::Deserialize;
 use tokio::time::Duration;
 
 use crate::{db::Db, invalid_str, multipart_to_map, passwd, pre::*};
-use std::collections::HashMap;
 
 #[derive(Deserialize)]
 pub struct LoginForm {
@@ -47,6 +46,9 @@ pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
 
 /** make a new thread */
 pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
+    let db = Db::new()?;
+    let _ = db.me(&C)?;
+
     let map = multipart_to_map(&mut m).await?;
 
     /* get string fields as string */
@@ -58,22 +60,33 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
             .to_string(),
         )
     };
+
+    /* board & database setup */
     let board = M("board")?;
+    if invalid_str!(board, 32) {
+        return err_page!(("board {board} is invalid") => ("/"));
+    }
+    let goto = format!("/b/{board}");
+
+    /* get the board by name */
+    let board = un!(db.get_board_by_name(board), "{goto}");
+
+    /* convert other params to strings */
     let name = M("name")?;
     let cont = M("content")?;
 
     /* sanitize */
-    if invalid_str!(name, 64)
-        || invalid_str!(cont, 2048)
-        || invalid_str!(board, 32)
-    {
-        return err_page!(("invalid thread form parameters") => ("/b/{board}"));
+    if invalid_str!(name, 64) || invalid_str!(cont, 2048) {
+        return err_page!(("invalid thread form parameters") => ("{goto}"));
     }
 
     /* get file bytes */
     let file = map.get("file");
 
-    let db = un!(Db::new());
+    let t = un!(
+        db.new_thread(board.id, &name, &cont, file.cloned()),
+        "{goto}"
+    );
 
     Ok(page!(db, {
         ("new thread created"),
@@ -86,6 +99,9 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Html<String>> {
         <p>{cont}</p>
         <p>{file:?}</p>
         "#,
+        name = t.name,
+        cont = t.cont,
+        file = t.file,
         fields = map.iter()
             .map(|(n, v)| format!(
                 "

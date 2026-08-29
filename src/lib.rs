@@ -177,7 +177,7 @@ pub async fn multipart_to_map(m: &mut Multipart) -> R<HashMap<String, Bytes>> {
     /* map of multipart fields */
     let mut map = HashMap::new();
 
-    while let Some(mut f) = un!(m.next_field().await) {
+    while let Some(f) = un!(m.next_field().await) {
         let n = un!(f
             .name()
             .ok_or("no name for multipart field found".to_string()))

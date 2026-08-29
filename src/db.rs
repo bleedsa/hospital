@@ -90,20 +90,19 @@ pub struct Thread {
     pub name: String,
     pub cont: String,
     pub hidden: bool,
-    pub file: Option<String>,
+    pub file: Option<i64>,
     pub board: i64,
 }
 
 impl Thread {
     #[inline(always)]
     pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
-        let file: Option<String> = r.get(4)?;
         Ok(Thread {
             id: r.get(0)?,
             name: r.get(1)?,
             cont: r.get(2)?,
             hidden: r.get(3)?,
-            file,
+            file: r.get(4)?,
             board: r.get(5)?,
         })
     }
@@ -488,8 +487,8 @@ impl Db {
             where id = LAST_INSERT_ROWID()
             ",
         ))
-            .query_map((), File::new)
-            .map(|mut i| i.next());
+        .query_map((), File::new)
+        .map(|mut i| i.next());
 
         if let Some(f) = un!(r) {
             re!(f)
@@ -500,7 +499,7 @@ impl Db {
 
     /** get a thread by id */
     pub fn get_thread(&self, id: i64) -> R<Thread> {
-        let mut r = un!(self.sql.prepare(
+        let r = un!(self.sql.prepare(
             "
             select * from threads
             where id = ?1
@@ -536,19 +535,15 @@ impl Db {
             None
         };
 
+        puts!("making new thread {name}...");
         un!(self.sql.execute(
             "
             insert into threads (name, cont, hidden, file, board)
             values (?1, ?2, ?3, ?4, ?5)
             ",
-            (
-                name,
-                cont,
-                false,
-                file.map(|f| f.bytes),
-                board,
-            )
+            (name, cont, false, file.map(|f| f.id), board)
         ));
+        println!("ok");
 
         let r = un!(self.sql.prepare(
             "
@@ -556,8 +551,8 @@ impl Db {
             where id = LAST_INSERT_ROWID()
             ",
         ))
-            .query_map((), Thread::new)
-            .map(|mut i| i.next());
+        .query_map((), Thread::new)
+        .map(|mut i| i.next());
 
         if let Some(t) = un!(r) {
             re!(t)
@@ -569,11 +564,11 @@ impl Db {
 
 #[cfg(test)]
 pub mod test {
-    use axum::body::Bytes;
     use crate::{
         db::{Db, SESSION_HASH_LEN},
         passwd,
     };
+    use axum::body::Bytes;
     use std::{fs, iter::zip};
 
     pub fn O(p: &str) -> Db {
