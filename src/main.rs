@@ -9,20 +9,18 @@ use tokio::net::TcpListener;
 use hospital::db::Db;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> R<()> {
     let cfg = &*CFG;
     let addr = format!("{}:{}", cfg.server.ip, cfg.server.port);
 
     /* create a database just to run the base CREATE commands */
-    let _ = match Db::new() {
-        Ok(_) => (),
-        Err(e) => fatal!("{e}"),
-    };
+    let _ = Db::new()?.init()?;
 
     /* create the routes */
     let app = Router::new()
         .route("/login", get(routes::login))
         .route("/act/login", post(routes::act::login))
+        .route("/act/new-thread", post(routes::act::new_thread))
         .route("/dbg/user/{id}", get(routes::dbg::user))
         .route("/b/{name}", get(routes::b::by_name))
         .route("/", get(routes::index))
@@ -40,4 +38,6 @@ async fn main() {
         Ok(()) => (),
         Err(e) => fatal!("{e}"),
     };
+
+    Ok(())
 }

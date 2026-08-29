@@ -1,10 +1,11 @@
+use axum::body::Bytes;
 use axum_cookie::prelude::*;
 use rusqlite::{Connection, Row, params};
 
 use crate::{passwd, pre::*, rand::rand_str};
 use std::{fs, path::Path};
 
-pub const SESSION_HASH_LEN: usize = 64;
+pub const SESSION_HASH_LEN: usize = 512;
 
 /** a user entry in the database */
 #[derive(Clone, Debug, PartialEq)]
@@ -68,6 +69,46 @@ impl Board {
     }
 }
 
+pub struct File {
+    pub id: i64,
+    pub bytes: Vec<u8>,
+}
+
+impl File {
+    #[inline(always)]
+    pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            id: r.get(0)?,
+            bytes: r.get(1)?,
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Thread {
+    pub id: i64,
+    pub name: String,
+    pub cont: String,
+    pub hidden: bool,
+    pub file: Option<String>,
+    pub board: i64,
+}
+
+impl Thread {
+    #[inline(always)]
+    pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
+        let file: Option<String> = r.get(4)?;
+        Ok(Thread {
+            id: r.get(0)?,
+            name: r.get(1)?,
+            cont: r.get(2)?,
+            hidden: r.get(3)?,
+            file,
+            board: r.get(5)?,
+        })
+    }
+}
+
 pub struct Db {
     pub sql: Connection,
 }
@@ -96,26 +137,6 @@ impl Db {
 
     /** initialize a database with the tables we need */
     pub fn init(self) -> R<Self> {
-        /* create the init table if it doesn't exist */
-        un!(self.sql.execute(
-            r#"
-            create table if not exists init (
-                id integer primary key autoincrement
-            );
-            "#,
-            []
-        ));
-
-        /* check the table to see if we already init. saves on a few queries */
-        let q = un!(self.sql.prepare("select * from init"))
-            .query_map((), |_| Ok(()))
-            .map(|mut i| i.next());
-
-        /* return if we found a row in the init table */
-        if let Some(_) = un!(q) {
-            return Ok(self);
-        }
-
         /* default table querys */
         for q in [
             r#"
@@ -142,19 +163,27 @@ impl Db {
                 hidden boolean not null
             );
             "#,
+            r#"
+            create table if not exists threads (
+                id integer primary key autoincrement,
+                name text not null,
+                cont text not null,
+                hidden boolean not null,
+                file integer,
+                board integer not null
+            );
+            "#,
+            r#"
+            create table if not exists files (
+                id integer primary key autoincrement,
+                bytes blob not null
+            );
+            "#,
         ]
         .into_iter()
         {
             un!(self.sql.execute(q, []));
         }
-
-        /* mark that we have, in fact, init */
-        un!(self.sql.execute(
-            "
-            insert into init default values; 
-            ",
-            ()
-        ));
 
         Ok(self)
     }
@@ -288,14 +317,6 @@ impl Db {
 
     /** make a new session for a user */
     pub fn new_session(&self, id: i64) -> R<Session> {
-        un!(self.sql.execute(
-            "
-            delete from sessions
-            where id = ?1
-            ",
-            (id,)
-        ));
-
         /* make a random hash string */
         let hash = rand_str::<SESSION_HASH_LEN>()?;
 
@@ -423,6 +444,7 @@ impl Db {
         /* verify that the board actually exists */
         /* TODO: does retrieving the board twice make this too slow? */
         let _ = self.get_board(id)?;
+
         un!(self.sql.execute(
             "
             update boards
@@ -434,10 +456,120 @@ impl Db {
 
         self.get_board(id)
     }
+
+    /** make a board visible */
+    pub fn visible_board(&self, id: i64) -> R<Board> {
+        let _ = self.get_board(id)?;
+
+        un!(self.sql.execute(
+            "
+            update boards
+            set hidden = false
+            where id = ?1
+            ",
+            (id,)
+        ));
+
+        self.get_board(id)
+    }
+
+    /** add a new file to the db */
+    pub fn new_file(&self, file: Bytes) -> R<File> {
+        un!(self.sql.execute(
+            "insert into files (bytes)
+            values (?1)
+            ",
+            (file.to_vec(),)
+        ));
+
+        let r = un!(self.sql.prepare(
+            "
+            select * from files
+            where id = LAST_INSERT_ROWID()
+            ",
+        ))
+            .query_map((), File::new)
+            .map(|mut i| i.next());
+
+        if let Some(f) = un!(r) {
+            re!(f)
+        } else {
+            err_fmt!("Db::new_file(): file created, but not found")
+        }
+    }
+
+    /** get a thread by id */
+    pub fn get_thread(&self, id: i64) -> R<Thread> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from threads
+            where id = ?1
+            "
+        ))
+        .query_map((id,), Thread::new)
+        .map(|mut i| i.next());
+
+        if let Some(t) = un!(r) {
+            re!(t)
+        } else {
+            err_fmt!("Db::get_thread({id}): thread not found")
+        }
+    }
+
+    /** make a new thread */
+    pub fn new_thread<N, C>(
+        &self,
+        board: i64,
+        name: N,
+        cont: C,
+        file: Option<Bytes>,
+    ) -> R<Thread>
+    where
+        N: AsRef<str>,
+        C: AsRef<str>,
+    {
+        let name = name.as_ref();
+        let cont = cont.as_ref();
+        let file = if let Some(b) = file {
+            Some(self.new_file(b)?)
+        } else {
+            None
+        };
+
+        un!(self.sql.execute(
+            "
+            insert into threads (name, cont, hidden, file, board)
+            values (?1, ?2, ?3, ?4, ?5)
+            ",
+            (
+                name,
+                cont,
+                false,
+                file.map(|f| f.bytes),
+                board,
+            )
+        ));
+
+        let r = un!(self.sql.prepare(
+            "
+            select * from threads
+            where id = LAST_INSERT_ROWID()
+            ",
+        ))
+            .query_map((), Thread::new)
+            .map(|mut i| i.next());
+
+        if let Some(t) = un!(r) {
+            re!(t)
+        } else {
+            err_fmt!("Db::new_thread(): thread created, but not found")
+        }
+    }
 }
 
 #[cfg(test)]
 pub mod test {
+    use axum::body::Bytes;
     use crate::{
         db::{Db, SESSION_HASH_LEN},
         passwd,
@@ -574,8 +706,18 @@ pub mod test {
     }
 
     #[test]
+    fn visible_board() {
+        let db = O("run/test/visible_board.db");
+        let b = db.new_board("g", "g").unwrap();
+        let b = db.hide_board(b.id).unwrap();
+        assert!(b.hidden);
+        let b = db.visible_board(b.id).unwrap();
+        assert!(!b.hidden);
+    }
+
+    #[test]
     fn visible_boards() {
-        let db = O("run/test/page/visible_boards.db");
+        let db = O("run/test/visible_boards.db");
 
         /* generate some boards */
         for (n, h) in [
@@ -597,5 +739,27 @@ pub mod test {
         for b in bs {
             assert!(!b.hidden);
         }
+    }
+
+    #[test]
+    fn new_file() {
+        let db = O("run/test/new_file.db");
+        let bs = Bytes::copy_from_slice(b"1234567890abcdef");
+        let f = db.new_file(bs.clone()).unwrap();
+
+        assert_eq!(Bytes::copy_from_slice(&f.bytes), bs);
+    }
+
+    #[test]
+    fn new_thread() {
+        let db = O("run/test/new_thread.db");
+
+        let b = db.new_board("test", "test").unwrap();
+        let t = db.new_thread(b.id, "test", "test", None).unwrap();
+
+        assert_eq!(&t.name, "test");
+        assert_eq!(&t.cont, "test");
+        assert_eq!(t.hidden, false);
+        assert_eq!(t.file, None);
     }
 }

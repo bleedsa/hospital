@@ -11,7 +11,7 @@ struct Args {
     #[arg(long, short)]
     description: String,
     #[arg(long, short)]
-    hidden: bool,
+    invisible: bool,
 }
 
 fn main() -> R<()> {
@@ -22,9 +22,14 @@ fn main() -> R<()> {
     let b = db.new_board(&A.board, &A.description)?;
     println!("ok");
 
-    if A.hidden {
+    if A.invisible {
         puts!("hiding board...");
         db.hide_board(b.id)?;
+        println!("ok");
+    } else {
+        puts!("making board visible...");
+        db.visible_board(b.id)?;
+        println!("ok");
     }
 
     println!("created new board: {b:#?}");

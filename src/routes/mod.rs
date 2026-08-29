@@ -5,6 +5,11 @@ pub mod act;
 pub mod b;
 pub mod dbg;
 
+#[macro_export]
+macro_rules! invalid_str {
+    ($s:expr, $L:expr) => {{ $s.is_empty() || $s.len() > $L }};
+}
+
 /** index/homepage (GET /) */
 pub async fn index() -> H<Html<String>> {
     Ok(page! {

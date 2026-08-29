@@ -17,7 +17,11 @@ pub async fn by_name<'a>(
         <p><span class="italic">{desc}</span></p>
         <div class="new-thread">
             <h3>new thread</h3>
-            <form action="/act/new-thread" method="post">
+            <form
+                action="/act/new-thread"
+                method="post"
+                enctype="multipart/form-data"
+            >
                 <table>
                     <tr>
                         <td>name</td>
@@ -30,7 +34,12 @@ pub async fn by_name<'a>(
                             </textarea>
                         </td>
                     </tr>
+                    <tr>
+                        <td>image</td>
+                        <td><input type="file" name="file"></td>
+                    </tr>
                 </table>
+                <input type="hidden" name="board" value="{n}">
                 <input type="submit" value="go">
             </form>
         </div>

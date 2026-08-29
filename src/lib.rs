@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use axum::response::Html;
+use axum::{body::Bytes, extract::Multipart, response::Html};
 use serde::Deserialize;
 
-use std::{fs, sync::LazyLock};
+use std::{collections::HashMap, fs, sync::LazyLock};
 
 pub mod css;
 pub mod db;
@@ -66,6 +66,17 @@ macro_rules! re {
 macro_rules! un {
     ($r:expr) => {{ $crate::re!($r)? }};
     ($r:expr, $($g:tt)*) => {{ $crate::re!($r, $($g)*)? }};
+}
+
+/** unwrap a result or fatal */
+#[macro_export]
+macro_rules! un_fatal {
+    ($r:expr) => {{
+        match $r {
+            Ok(x) => x,
+            Err(e) => fatal!("un!(): {e}"),
+        }
+    }};
 }
 
 /** make an `Err(format!($($x)*))`. */
@@ -161,3 +172,19 @@ pub static CFG: LazyLock<Cfg> = LazyLock::new(|| match Cfg::new() {
     Ok(x) => x,
     Err(e) => fatal!("{e}"),
 });
+
+pub async fn multipart_to_map(m: &mut Multipart) -> R<HashMap<String, Bytes>> {
+    /* map of multipart fields */
+    let mut map = HashMap::new();
+
+    while let Some(mut f) = un!(m.next_field().await) {
+        let n = un!(f
+            .name()
+            .ok_or("no name for multipart field found".to_string()))
+        .to_string();
+        let d = un!(f.bytes().await);
+        map.insert(n, d);
+    }
+
+    Ok(map)
+}
