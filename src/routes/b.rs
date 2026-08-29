@@ -9,12 +9,12 @@ pub async fn by_name<'a>(
 ) -> H<Html<String>> {
     let db = un!(Db::new(), "/");
     let b = un!(db.get_board_by_name(&n), "/");
-    let me = un!(db.me(&c), "/b/{}", b.id);
+    let _ = un!(db.me(&c), "/b/{}", b.id);
 
     let threads = un!(db.get_threads(b.id), "/b/{}", b.id);
 
     Ok(page!(db, {
-        ("{n} ({}) :: view board", me.name),
+        ("{n} :: view board"),
         r#"
         <h1>{n}</h1>
         <p><span class="italic">{desc}</span></p>
