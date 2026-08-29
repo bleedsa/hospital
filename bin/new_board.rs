@@ -32,6 +32,8 @@ fn main() -> R<()> {
         println!("ok");
     }
 
+    let b = db.get_board(b.id)?;
+
     println!("created new board: {b:#?}");
 
     Ok(())
