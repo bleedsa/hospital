@@ -14,12 +14,17 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         ("{name}"),
         r#"
         <h1>{name}</h1>
-        <p>#{id}@{time}</p>
-        <div class="base-post">
-            <img src="{img}" class="thread-img">
-            <p class="post-content">{cont}</p>
-        </p>
-        <hr>
+        <div class="post-box">
+            <p>#{id}@{time}</p>
+            <div class="base-post">
+                {img}
+                <p class="post-content">{cont}</p>
+            </div>
+        </div>
+
+        <div class="posts">
+            {posts}
+        </div>
 
         <div class="new-post">
             <h3>new post</h3>
@@ -48,33 +53,40 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                 <input type="submit" value="go">
             </form>
         </div>
-
-        <div class="posts">
-            {posts}
-        </div>
         "#,
         id = t.id,
         time = timestamp_to_time(t.time),
         img = if let Some(id) = t.file {
             let f = un!(db.get_file(id), "{goto}");
-            format!("/i/{}", f.id)
+            format!(r#"<img src="/i/{}" class="post-img"><br>"#, f.id)
         } else {
             "".to_string()
         },
-        cont = t.cont,
+        cont = h!(t.cont),
         posts = un!(db.get_posts(t.id))
             .into_iter()
             .map(|p| format!(
                 r#"
                 <div class="post-box" id="{id}">
                     <p class="bold"><a href="/t/{tid}#{id}">#{id}</a>::{time}</p>
+                    {img}
                     <p class="post-content">{cont}</p>
                 </div>
                 "#,
                 id = p.id,
                 tid = t.id,
                 time = timestamp_to_time(p.time),
-                cont = p.cont,
+                cont = h!(p.cont),
+                img = if let Some(id) = p.file {
+                    let f = if let Ok(f) = db.get_file(id) {
+                        f
+                    } else {
+                        return String::new()
+                    };
+                    format!(r#"<img src="/i/{}" class="post-img"><br>"#, f.id)
+                } else {
+                    String::new()
+                }
             ))
             .collect::<String>(),
     }))

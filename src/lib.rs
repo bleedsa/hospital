@@ -18,7 +18,7 @@ pub mod tags;
 pub mod pre {
     pub use crate::{
         CFG, H, R, err_fmt, err_page, fatal, int2bool, page, puts, re,
-        timestamp_to_time, un, now,
+        timestamp_to_time, un, now, h,
     };
 }
 
@@ -101,6 +101,13 @@ macro_rules! int2bool {
                 false
             }
         ),*)
+    }};
+}
+
+#[macro_export]
+macro_rules! h {
+    ($str:expr) => {{
+        html_escape::encode_safe(&$str).to_string()
     }};
 }
 
