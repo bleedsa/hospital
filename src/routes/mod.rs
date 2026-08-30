@@ -1,5 +1,6 @@
-use crate::{pre::*, tags::tag};
+use crate::{pre::*, tags::tag, db::Db};
 use axum::response::Html;
+use axum_cookie::CookieManager;
 
 pub mod act;
 pub mod b;
@@ -14,8 +15,10 @@ macro_rules! invalid_str {
 }
 
 /** index/homepage (GET /) */
-pub async fn index() -> H<Html<String>> {
-    Ok(page! {
+pub async fn index(C: CookieManager) -> H<Html<String>> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+    Ok(page!(db, Some(me.id), {
         ("index"),
         r#"
         <h1>{title}.</h1>
@@ -23,11 +26,14 @@ pub async fn index() -> H<Html<String>> {
         "#,
         title = (&*CFG).title(),
         tag = tag(),
-    })
+    }))
 }
 
-pub async fn login() -> H<Html<String>> {
-    Ok(page! {
+pub async fn login(C: CookieManager) -> H<Html<String>> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+
+    Ok(page!(db, Some(me.id), {
         ("login"),
         r#"
         <h1>login.</h1>
@@ -55,5 +61,5 @@ pub async fn login() -> H<Html<String>> {
             </form>
         </div>
         "#
-    })
+    }))
 }

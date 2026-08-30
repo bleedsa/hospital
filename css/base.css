@@ -21,6 +21,34 @@ a:visited {
 	color: var(--a-unclicked);
 }
 
+textarea {
+	background-color: var(--bg);
+	color: var(--fg);
+	border: 1px solid var(--fg);
+}
+
+input {
+	border: 1px solid var(--fg);
+	background-color: var(--bg);
+	color: var(--fg);
+}
+
+input[type=file] {
+	border: 0;
+	background: var(--bg);
+}
+
+input[type=file]::file-selector-button {
+	background: var(--bg);
+	color: var(--fg);
+	border: 1px solid var(--fg);
+}
+
+input[type=submit] {
+	border: 1px solid var(--fg);
+	background-color: var(--bg);
+}
+
 .bold {
 	font-weight: bold;
 }
@@ -64,4 +92,8 @@ a:visited {
 .copyright {
 	font-size: 0.75em;
 	font-style: italic;
+}
+
+.bottom {
+	margin-top: 20px;
 }
