@@ -24,11 +24,11 @@ a:visited {
 textarea {
 	background-color: var(--bg);
 	color: var(--fg);
-	border: 1px solid var(--fg);
+	border: 1px solid var(--borders);
 }
 
 input {
-	border: 1px solid var(--fg);
+	border: 1px solid var(--borders);
 	background-color: var(--bg);
 	color: var(--fg);
 }
@@ -47,6 +47,18 @@ input[type=file]::file-selector-button {
 input[type=submit] {
 	border: 1px solid var(--fg);
 	background-color: var(--bg);
+}
+
+select {
+	background-color: var(--bg);
+	color: var(--fg);
+	border: 1px solid var(--border);
+}
+
+select::after {
+	background-color: var(--bg);
+	color: var(--fg);
+	border: 1px solid var(--border);
 }
 
 .bold {

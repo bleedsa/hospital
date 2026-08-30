@@ -1,0 +1,7 @@
+:root {
+	--fg: red;
+	--bg: white;
+	--borders: red;
+	--a-clicked: red;
+	--a-unclicked: #990000;
+}

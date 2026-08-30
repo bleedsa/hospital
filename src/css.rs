@@ -13,7 +13,11 @@ pub static THEMES: LazyLock<HashMap<&'static str, String>> =
     LazyLock::new(|| {
         let mut r = HashMap::new();
 
-        for (n, f) in [("blue screen of death", "blue"), ("default", "default")]
+        for (n, f) in [
+            ("blue screen of death", "blue"), ("default", "default"),
+            ("blood", "red"),
+            ("black", "black"),
+        ]
             .into_iter()
         {
             let p = theme_path(f);
