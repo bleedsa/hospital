@@ -221,6 +221,7 @@ pub async fn hide_post(
 #[derive(Deserialize)]
 pub struct LockThreadForm {
     pub id: i64,
+    pub locked: bool,
 }
 
 pub async fn lock_thread(
@@ -238,7 +239,11 @@ pub async fn lock_thread(
     let b = db.get_board(t.board)?;
     let goto = format!("/b/{}#{}", b.name, t.id);
 
-    un!(db.lock_thread(t.id), "{goto}");
+    if f.locked {
+        un!(db.unlock_thread(t.id), "{goto}");
+    } else {
+        un!(db.lock_thread(t.id), "{goto}");
+    }
 
     Ok(Redirect::to(&goto))
 }

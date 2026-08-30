@@ -91,12 +91,19 @@ pub async fn by_name<'a>(
 
                         <form action="/act/lock-thread" method="post">
                             <div class="admin-button">
-                                <input type="submit" value="lock">
+                                <input type="submit" value="{lock_unlock}">
                                 <input type="hidden" name="id" value="{id}">
+                                <input type="hidden" name="lock" value="{locked}">
                             </div>
                         </form>
                         "#,
                         id = t.id,
+                        lock_unlock = if t.locked() {
+                            "unlock"
+                        } else {
+                            "lock"
+                        },
+                        locked = t.locked(),
                     )
                 } else {
                     String::new()

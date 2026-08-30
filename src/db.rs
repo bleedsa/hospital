@@ -873,6 +873,21 @@ impl Db {
 
         Ok(())
     }
+
+    pub fn unlock_thread(&self, id: i64) -> R<()> {
+        L!(("unlocking thread \"{}\"", self.get_thread(id)?.name) => {
+            un!(self.sql.execute(
+                "
+                update threads
+                set locked = false
+                where id = ?1
+                ",
+                (id,)
+            ));
+        });
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -1261,5 +1276,21 @@ pub mod test {
         let t = db.new_thread(b.id, u.id, "h", "i", None).unwrap();
         db.lock_thread(t.id).unwrap();
         db.new_post(t.id, u.id, "h", None).unwrap();
+    }
+
+    #[test]
+    fn unlock_thread() {
+        let db = O("run/test/unlock_thread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("f", "g").unwrap();
+        let t = db.new_thread(b.id, u.id, "h", "i", None).unwrap();
+
+        db.lock_thread(t.id).unwrap();
+        let t = db.get_thread(t.id).unwrap();
+        assert!(t.locked());
+
+        db.unlock_thread(t.id).unwrap();
+        let t = db.get_thread(t.id).unwrap();
+        assert!(!t.locked());
     }
 }
