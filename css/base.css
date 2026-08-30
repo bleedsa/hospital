@@ -8,7 +8,7 @@ hr {
 	display: block;
 	height: 1px;
 	border: 0;
-	border-top: 1px solid var(--borders);
+	border-top: var(--border-width) solid var(--borders);
 	margin: 1em 0;
 	padding: 0;
 }
@@ -24,13 +24,14 @@ a:visited {
 textarea {
 	background-color: var(--bg);
 	color: var(--fg);
-	border: 1px solid var(--borders);
+	border: var(--border-width) solid var(--borders);
 }
 
 input {
-	border: 1px solid var(--borders);
+	border: var(--border-width) solid var(--borders);
 	background-color: var(--bg);
 	color: var(--fg);
+	font-weight: bold;
 }
 
 input[type=file] {
@@ -41,24 +42,25 @@ input[type=file] {
 input[type=file]::file-selector-button {
 	background: var(--bg);
 	color: var(--fg);
-	border: 1px solid var(--fg);
+	border: var(--border-width) solid var(--fg);
+	font-weight: bold;
 }
 
 input[type=submit] {
-	border: 1px solid var(--fg);
+	border: var(--border-width) solid var(--fg);
 	background-color: var(--bg);
 }
 
 select {
 	background-color: var(--bg);
 	color: var(--fg);
-	border: 1px solid var(--border);
+	border: var(--border-width) solid var(--border);
 }
 
 select::after {
 	background-color: var(--bg);
 	color: var(--fg);
-	border: 1px solid var(--border);
+	border: var(--border-width) solid var(--border);
 }
 
 .bold {
@@ -66,7 +68,7 @@ select::after {
 }
 
 .thread-box {
-	border: 1px solid var(--borders);
+	border: var(--border-width) solid var(--borders);
 	padding: 5px;
 	padding-left: 20px;
 	padding-right: 20px;
@@ -79,7 +81,7 @@ select::after {
 }
 
 .post-box {
-	border: 1px solid var(--borders);
+	border: var(--border-width) solid var(--borders);
 	padding: 5px;
 	padding-left: 20px;
 	padding-right: 20px;

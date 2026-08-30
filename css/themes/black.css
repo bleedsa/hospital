@@ -2,6 +2,7 @@
 	--fg: white;
 	--bg: black;
 	--borders: white;
+	--border-size: 2px;
 	--a-clicked: white;
 	--a-unclicked: white;
 }
