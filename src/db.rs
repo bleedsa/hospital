@@ -3,7 +3,7 @@ use axum_cookie::prelude::*;
 use image::ImageReader;
 use rusqlite::{Connection, Row, params};
 
-use crate::{passwd, pre::*, rand::rand_str, css::{self, THEMES}};
+use crate::{css, passwd, pre::*, rand::rand_str};
 use std::{fs, io::Cursor, path::Path};
 
 pub const SESSION_HASH_LEN: usize = 512;
@@ -774,8 +774,8 @@ impl Db {
             where id = ?1
             "
         ))
-            .query_map((id,), |r| r.get(0))
-            .map(|mut i| i.next());
+        .query_map((id,), |r| r.get(0))
+        .map(|mut i| i.next());
 
         if let Some(t) = un!(r) {
             let o = t.unwrap_or(String::new());
@@ -924,7 +924,7 @@ impl Db {
             return err_fmt!("failed to get theme \"{t}\": {e}");
         }
 
-         L!(("setting {}'s theme to {t}", u.name) => {
+        L!(("setting {}'s theme to {t}", u.name) => {
             un!(self.sql.execute(
                 "
                 update users
@@ -934,6 +934,19 @@ impl Db {
                 (t, id)
             ));
         });
+
+        Ok(())
+    }
+
+    pub fn rm_admin(&self, id: i64) -> R<()> {
+        un!(self.sql.execute(
+            "
+            update users
+            set admin = false
+            where id = ?1
+            ",
+            (id,)
+        ));
 
         Ok(())
     }
@@ -1373,5 +1386,19 @@ pub mod test {
         let t = db.get_theme(u.id).unwrap();
 
         assert_eq!("blue screen of death", t);
+    }
+
+    #[test]
+    fn rm_admin() {
+        let db = O("run/test/rm_admin.db");
+        let u = db.new_user("a", "a").unwrap();
+
+        db.new_admin(u.id).unwrap();
+        let u = db.get_user(u.id).unwrap();
+        assert!(u.admin);
+
+        db.rm_admin(u.id).unwrap();
+        let u = db.get_user(u.id).unwrap();
+        assert!(!u.admin);
     }
 }

@@ -39,6 +39,11 @@ name = "set_pass"
 test = false
 path = "bin/set_pass.rs"
 
+[[bin]]
+name = "rm_admin"
+test = false
+path = "bin/rm_admin.rs"
+
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = { version = "0.8.9", features = ["macros", "multipart"] }

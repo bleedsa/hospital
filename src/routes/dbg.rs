@@ -3,10 +3,7 @@ use axum_cookie::prelude::*;
 
 use crate::{db::Db, pre::*};
 
-pub async fn user(
-    C: CookieManager,
-    Path(id): Path<i64>
-) -> H<Html<String>> {
+pub async fn user(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
     let db = un!(Db::new());
     let u = un!(db.get_user(id));
 
