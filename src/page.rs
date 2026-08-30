@@ -54,7 +54,7 @@ macro_rules! page {
                     name = b.name,
                 ))
                 .collect::<Vec<_>>()
-                .join("\\")
+                .join("\\"),
         ))
     }};
 }
