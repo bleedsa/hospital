@@ -18,7 +18,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         <h2>{name}</h2>
         {back}
         <div class="post-box">
-            <p>#{id}::<a href="/u/{uname}">{uname}</a>@{time}</p>
+            <p class="bold">#{id}::<a href="/u/{uname}">{uname}</a>@{time}</p>
             <div class="base-post">
                 {img}
                 <p class="post-content">{cont}</p>
