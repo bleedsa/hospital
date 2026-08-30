@@ -366,13 +366,15 @@ impl Db {
         /* make a random hash string */
         let hash = rand_str::<SESSION_HASH_LEN>()?;
 
-        un!(self.sql.execute(
-            "
-            insert into sessions (hash, user)
-            values (?1, ?2)
-            ",
-            (hash, id),
-        ));
+        L!(("{} created new session {hash}", self.get_user(id)?.name) => {
+            un!(self.sql.execute(
+                "
+                insert into sessions (hash, user)
+                values (?1, ?2)
+                ",
+                (hash, id),
+            ));
+        });
 
         /* get the session & return */
         let r = un!(self.sql.prepare("select * from sessions where user = ?1"))
@@ -527,12 +529,14 @@ impl Db {
         let im = un!(ImageReader::new(Cursor::new(&vec)).with_guessed_format());
         let _ = un!(im.decode());
 
-        un!(self.sql.execute(
-            "insert into files (bytes)
-            values (?1)
-            ",
-            (vec,)
-        ));
+        L!(("creating new file") => {
+            un!(self.sql.execute(
+                "insert into files (bytes)
+                values (?1)
+               ",
+                (vec,)
+            ));
+        });
 
         let r = un!(self.sql.prepare(
             "
@@ -648,13 +652,15 @@ impl Db {
             None
         };
 
-        un!(self.sql.execute(
-            "
-            insert into threads (name, cont, hidden, file, board, time, author)
-            values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
-            ",
-            (name, cont, false, file.map(|f| f.id), board, time, author)
-        ));
+        L!(("{} created new thread \"{name}\"", self.get_user(author)?.name) => {
+            un!(self.sql.execute(
+                "
+                insert into threads (name, cont, hidden, file, board, time, author)
+                values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+                ",
+                (name, cont, false, file.map(|f| f.id), board, time, author)
+            ));
+        });
 
         let r = un!(self.sql.prepare(
             "
@@ -692,13 +698,15 @@ impl Db {
         let thread = self.get_thread(thread)?;
         let board = self.get_board(thread.board)?;
 
-        un!(self.sql.execute(
-            "
-            insert into posts (cont, hidden, file, board, thread, time, author)
-            values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
-            ",
-            (cont, false, file, board.id, thread.id, time, author)
-        ));
+        L!(("{} made new post with content \"{cont}\"", self.get_user(author)?.name) => {
+            un!(self.sql.execute(
+                "
+                insert into posts (cont, hidden, file, board, thread, time, author)
+                values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+                ",
+                (cont, false, file, board.id, thread.id, time, author)
+            ));
+        });
 
         let r = un!(self.sql.prepare(
             "
@@ -758,14 +766,16 @@ impl Db {
     }
 
     pub fn hide_post(&self, id: i64) -> R<()> {
-        un!(self.sql.execute(
-            "
-            update posts
-            set hidden = true
-            where id = ?1
-            ",
-            (id,)
-        ));
+        L!(("hiding post {}", self.get_post(id)?.cont) => {
+            un!(self.sql.execute(
+                "
+                update posts
+                set hidden = true
+                where id = ?1
+                ",
+                (id,)
+            ));
+        });
 
         Ok(())
     }
@@ -776,14 +786,16 @@ impl Db {
     {
         let bio = bio.as_ref();
 
-        un!(self.sql.execute(
-            "
-            update users
-            set bio = ?1
-            where id = ?2
-            ",
-            (bio, id)
-        ));
+        L!(("user {} updated their bio: {bio}", self.get_user(id)?.name) => {
+            un!(self.sql.execute(
+                "
+                update users
+                set bio = ?1
+                where id = ?2
+                ",
+                (bio, id)
+            ));
+        });
 
         Ok(())
     }
@@ -795,27 +807,34 @@ impl Db {
         let pass = pass.as_ref();
         let hash = passwd::hash(pass)?;
 
-        un!(self.sql.execute(
-            "
-            update users
-            set hash = ?1
-            where id = ?2
-            ",
-            (hash, id)
-        ));
+        L!((
+            "user {} updated their password; new hash \"{hash}\"",
+            self.get_user(id)?.name,
+        ) => {
+            un!(self.sql.execute(
+                "
+                update users
+                set hash = ?1
+                where id = ?2
+                ",
+                (hash, id)
+            ));
+        });
 
         Ok(())
     }
 
     pub fn hide_thread(&self, id: i64) -> R<()> {
-        un!(self.sql.execute(
-            "
-            update threads
-            set hidden = true
-            where id = ?1
-            ",
-            (id,)
-        ));
+        L!(("hiding thread \"{}\"", self.get_thread(id)?.name) => {
+            un!(self.sql.execute(
+                "
+                update threads
+                set hidden = true
+                where id = ?1
+                ",
+                (id,)
+            ));
+        });
 
         Ok(())
     }

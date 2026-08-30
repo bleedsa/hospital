@@ -57,7 +57,6 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
             </form>
         </div>
 
-        <hr>
         {back}
         "#,
          id = t.id,
@@ -71,7 +70,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
              "".to_string()
          },
          cont = h!(t.cont),
-         back = format!(r#"<p><a href="/b/{}">go back</a></p>"#, b.name),
+         back = format!(r#"<p><a href="/b/{}#{}">go back</a></p>"#, b.name, t.id),
          posts = un!(db.get_visible_posts(t.id))
              .into_iter()
              .map(|p| Ok(format!(

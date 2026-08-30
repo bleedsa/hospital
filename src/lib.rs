@@ -18,8 +18,8 @@ pub mod tags;
 
 pub mod pre {
     pub use crate::{
-        CFG, H, R, err_fmt, err_page, fatal, h, int2bool, now, page, puts, re,
-        timestamp_to_time, un,
+        CFG, H, L, R, err_fmt, err_page, fatal, h, int2bool, now, page, puts,
+        re, timestamp_to_time, un,
     };
 }
 
@@ -110,6 +110,43 @@ macro_rules! h {
     ($str:expr) => {{ html_escape::encode_safe(&$str).to_string() }};
 }
 
+#[macro_export]
+macro_rules! L {
+    (($($m:tt)*) => $x:expr) => {{
+        use std::{io::Write, fs::{self, OpenOptions}};
+        use $crate::pre::*;
+
+        let m = format!("[log][{}]: {}...", timestamp_to_time(now()?), format!($($m)*));
+
+       let p = &(&*CFG).server.log_file;
+       let mut f = if un!(fs::exists(p)) {
+            un!(OpenOptions::new()
+                .write(true)
+                .append(true)
+                .open(p))
+       } else {
+           un!(OpenOptions::new()
+               .write(true)
+               .create(true)
+               .open(p))
+       };
+
+        puts!("{m}");
+        if let Err(e) = write!(f, "{m}") {
+            eprintln!("couldn't write to log file {p}: {e}");
+        }
+
+        let r = $x;
+
+        println!("ok");
+        if let Err(e) = writeln!(f, "ok") {
+            eprintln!("couldn't write ok to log file {p}: {e}");
+        }
+
+        r
+    }};
+}
+
 /** a basic result type */
 pub type R<T> = Result<T, String>;
 
@@ -121,6 +158,7 @@ pub struct Server {
     pub ip: String,
     pub port: u16,
     pub db: String,
+    pub log_file: String,
 }
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
