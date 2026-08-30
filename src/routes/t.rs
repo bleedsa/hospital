@@ -28,35 +28,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         <div class="posts">
             {posts}
         </div>
-
-        <div class="new-post">
-            <h3>new post</h3>
-            <form
-                action="/act/new-post"
-                method="post"
-                enctype="multipart/form-data"
-            >
-                <table>
-                    <tr>
-                        <td>post content</td>
-                        <td>
-                            <textarea
-                                name="content"
-                                rows="3"
-                                cols="30"
-                            ></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>image</td>
-                        <td><input type="file" name="file"></td>
-                    </tr>
-                </table>
-                <input type="hidden" name="thread" value="{id}">
-                <input type="submit" value="go">
-            </form>
-        </div>
-
+        {new_post}
         {back}
         "#,
          id = t.id,
@@ -71,6 +43,41 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
          },
          cont = h!(t.cont),
          back = format!(r#"<p><a href="/b/{}#{}">go back</a></p>"#, b.name, t.id),
+         new_post = if t.locked() {
+             r#"<h3>this thread is locked. you cannot post in it."#.into()
+         } else {
+             format!(
+                r#"
+                <div class="new-post">
+                    <h3>new post</h3>
+                    <form
+                        action="/act/new-post"
+                        method="post"
+                        enctype="multipart/form-data"
+                    >
+                        <table>
+                            <tr>
+                                <td>post content</td>
+                                <td>
+                                    <textarea
+                                        name="content"
+                                        rows="3"
+                                        cols="30"
+                                    ></textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>image</td>
+                                <td><input type="file" name="file"></td>
+                            </tr>
+                        </table>
+                        <input type="hidden" name="thread" value="{id}">
+                        <input type="submit" value="go">
+                    </form>
+                </div>
+                "#,
+             )
+         },
          posts = un!(db.get_visible_posts(t.id))
              .into_iter()
              .map(|p| Ok(format!(
@@ -102,7 +109,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                  hide = if me.admin {
                      format!(
                          r#"
-                         <div class="hide-button">
+                         <div class="admin-button">
                             <input type="submit" value="hide">
                             <input type="hidden" name="id" value="{id}">
                         </div>

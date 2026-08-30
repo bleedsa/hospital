@@ -217,3 +217,28 @@ pub async fn hide_post(
 
     Ok(Redirect::to(&goto))
 }
+
+#[derive(Deserialize)]
+pub struct LockThreadForm {
+    pub id: i64,
+}
+
+pub async fn lock_thread(
+    C: CookieManager,
+    Form(f): Form<LockThreadForm>,
+) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+
+    if !me.admin {
+        return err_page!(("you aren't an admin") => ("/"));
+    }
+
+    let t = db.get_thread(f.id)?;
+    let b = db.get_board(t.board)?;
+    let goto = format!("/b/{}#{}", b.name, t.id);
+
+    un!(db.lock_thread(t.id), "{goto}");
+
+    Ok(Redirect::to(&goto))
+}

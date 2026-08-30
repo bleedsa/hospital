@@ -28,10 +28,14 @@ body {
 	margin-bottom: 10px;
 }
 
-.hide-button>input[type=submit] {
+.admin-button>input[type=submit] {
 	width: 30px;
 	height: 15px;
 	font-size: 8px;
+}
+
+.admin-panel-box>form {
+	display: inline-block;
 }
 
 .post-content {

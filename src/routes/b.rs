@@ -61,9 +61,7 @@ pub async fn by_name<'a>(
                         <a href="/b/{bname}#{id}">#{id}</a>::<a href="/t/{id}">{name}</a>::<a href="/u/{uname}">{uname}</a>@<span class="unix-time">{time}</span>
                     </h3>
                     <p>{cont}</p>
-                    <form action="/act/hide-thread" method="post">
-                        {hide}
-                    </form>
+                    <div class="admin-panel-box">{admin_panel}</div>
                 </div>
                 "#,
                 id = t.id,
@@ -81,13 +79,22 @@ pub async fn by_name<'a>(
                     };
                     format!("{}{}", h!(&t.cont[..z]), if z == M { "..." } else { "" })
                 },
-                hide = if me.admin {
+                admin_panel = if me.admin {
                     format!(
                         r#"
-                        <div class="hide-button">
-                            <input type="submit" value="hide">
-                            <input type="hidden" name="id" value="{id}">
-                        </div>
+                        <form action="/act/hide-thread" method="post">
+                            <div class="admin-button">
+                                <input type="submit" value="hide">
+                                <input type="hidden" name="id" value="{id}">
+                            </div>
+                        </form>
+
+                        <form action="/act/lock-thread" method="post">
+                            <div class="admin-button">
+                                <input type="submit" value="lock">
+                                <input type="hidden" name="id" value="{id}">
+                            </div>
+                        </form>
                         "#,
                         id = t.id,
                     )

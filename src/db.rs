@@ -95,6 +95,7 @@ pub struct Thread {
     pub board: i64,
     pub time: i64,
     pub author: i64,
+    pub locked: Option<bool>,
 }
 
 impl Thread {
@@ -109,7 +110,20 @@ impl Thread {
             board: r.get(5)?,
             time: r.get(6)?,
             author: r.get(7)?,
+            locked: r.get(8)?,
         })
+    }
+
+    /** is this thread locked? 
+     * wrapped because `Thread::locked` is an `Option` for compat with
+     * the old db */
+    #[inline(always)]
+    pub fn locked(&self) -> bool {
+        if let Some(b) = self.locked {
+            b
+        } else {
+            false
+        }
     }
 }
 
@@ -204,7 +218,8 @@ impl Db {
                 file integer,
                 board integer not null,
                 time integer not null,
-                author integer not null
+                author integer not null,
+                locked boolean
             );
             "#,
             r#"
@@ -655,10 +670,10 @@ impl Db {
         L!(("{} created new thread \"{name}\"", self.get_user(author)?.name) => {
             un!(self.sql.execute(
                 "
-                insert into threads (name, cont, hidden, file, board, time, author)
-                values (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+                insert into threads (name, cont, hidden, file, board, time, author, locked)
+                values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
                 ",
-                (name, cont, false, file.map(|f| f.id), board, time, author)
+                (name, cont, false, file.map(|f| f.id), board, time, author, false)
             ));
         });
 
@@ -697,6 +712,11 @@ impl Db {
         };
         let thread = self.get_thread(thread)?;
         let board = self.get_board(thread.board)?;
+
+        if thread.locked() {
+            L!(("attempting to post in locked thread \"{}\"...erroring", thread.name) => ());
+            return err_fmt!("attempting to post in locked thread \"{}\"", thread.name);
+        }
 
         L!(("{} made new post with content \"{cont}\"", self.get_user(author)?.name) => {
             un!(self.sql.execute(
@@ -830,6 +850,21 @@ impl Db {
                 "
                 update threads
                 set hidden = true
+                where id = ?1
+                ",
+                (id,)
+            ));
+        });
+
+        Ok(())
+    }
+
+    pub fn lock_thread(&self, id: i64) -> R<()> {
+        L!(("locking thread \"{}\"", self.get_thread(id)?.name) => {
+            un!(self.sql.execute(
+                "
+                update threads
+                set locked = true
                 where id = ?1
                 ",
                 (id,)
@@ -1204,5 +1239,27 @@ pub mod test {
             .unwrap()
             .into_iter()
             .for_each(|p| assert!(!p.hidden));
+    }
+
+    #[test]
+    fn lock_thread() {
+        let db = O("run/test/lock_thread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("f", "g").unwrap();
+        let t = db.new_thread(b.id, u.id, "h", "i", None).unwrap();
+        db.lock_thread(t.id).unwrap();
+        let t = db.get_thread(t.id).unwrap();
+        assert!(t.locked());
+    }
+
+    #[test]
+    #[should_panic]
+    fn post_to_locked_thread() {
+        let db = O("run/test/post_to_locked_thread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("f", "g").unwrap();
+        let t = db.new_thread(b.id, u.id, "h", "i", None).unwrap();
+        db.lock_thread(t.id).unwrap();
+        db.new_post(t.id, u.id, "h", None).unwrap();
     }
 }
