@@ -27,3 +27,9 @@ body {
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
+
+.hide-button>input[type=submit] {
+	width: 30px;
+	height: 15px;
+	font-size: 8px;
+}

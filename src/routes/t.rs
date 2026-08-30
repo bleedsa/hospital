@@ -103,8 +103,10 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                  hide = if me.admin {
                      format!(
                          r#"
-                        <input type="submit" value="hide">
-                        <input type="hidden" name="id" value="{id}">
+                         <div class="hide-button">
+                            <input type="submit" value="hide">
+                            <input type="hidden" name="id" value="{id}">
+                        </div>
                         "#,
                          id = p.id,
                      )

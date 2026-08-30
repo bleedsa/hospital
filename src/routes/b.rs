@@ -84,8 +84,10 @@ pub async fn by_name<'a>(
                 hide = if me.admin {
                     format!(
                         r#"
-                        <input type="submit" value="hide">
-                        <input type="hidden" name="id" value="{id}">
+                        <div class="hide-button">
+                            <input type="submit" value="hide">
+                            <input type="hidden" name="id" value="{id}">
+                        </div>
                         "#,
                         id = t.id,
                     )
