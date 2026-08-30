@@ -33,7 +33,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
         "#,
          id = t.id,
          bname = b.name,
-         uname = h!(un!(db.get_user(t.author)).name),
+         uname = h!(format!("~{}", un!(db.get_user(t.author)).name)),
          time = format!(r#"<span class="unix-time">{}</a>"#, t.time),
          img = if let Some(id) = t.file {
              let f = un!(db.get_file(id), "{goto}");
@@ -93,7 +93,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                 "#,
                  id = p.id,
                  tid = t.id,
-                 uname = h!(un!(db.get_user(p.author)).name),
+                 uname = h!(format!("~{}", un!(db.get_user(p.author)).name)),
                  time = format!(r#"<span class="unix-time">{}</span>"#, p.time),
                  cont = h!(p.cont),
                  img = if let Some(id) = p.file {

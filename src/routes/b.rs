@@ -66,7 +66,7 @@ pub async fn by_name<'a>(
                 "#,
                 id = t.id,
                 bname = b.name,
-                uname = h!(un!(db.get_user(t.author)).name),
+                uname = h!(format!("~{}", un!(db.get_user(t.author)).name)),
                 name = h!(t.name),
                 time = t.time,
                 cont = {
