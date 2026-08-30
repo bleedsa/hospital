@@ -28,7 +28,6 @@ macro_rules! page {
                         <a href="/login">login</a>
                         ::
                         {boards}
-                        ::
                     </div>
                     <hr>
                     {body}
