@@ -93,7 +93,7 @@ pub async fn by_name<'a>(
                             <div class="admin-button">
                                 <input type="submit" value="{lock_unlock}">
                                 <input type="hidden" name="id" value="{id}">
-                                <input type="hidden" name="lock" value="{locked}">
+                                <input type="hidden" name="locked" value="{locked}">
                             </div>
                         </form>
                         "#,

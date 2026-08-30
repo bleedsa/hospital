@@ -1,6 +1,7 @@
 use axum::{
     Router,
     routing::{get, post},
+    extract::DefaultBodyLimit,
 };
 use axum_cookie::prelude::*;
 use hospital::{pre::*, routes};
@@ -32,6 +33,7 @@ async fn main() -> R<()> {
         .route("/i/{id}", get(routes::i::by_id))
         .route("/u/{name}", get(routes::u::by_name))
         .route("/", get(routes::index))
+        .layer(DefaultBodyLimit::max(1073742000))
         .layer(CookieLayer::default());
 
     /* bind to the address */
