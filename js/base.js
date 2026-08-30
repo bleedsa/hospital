@@ -2,9 +2,17 @@ let times = document.getElementsByClassName("unix-time");
 let days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 for (let i = 0; i < times.length; i++) {
+	/* for e in times */
 	let e = times.item(i);
+	/* (int)e */
 	let t = parseInt(e.innerHTML);
+	/* conv timestamp to ms */
 	let d = new Date(t*1000);
-	let fmt = `${days[d.getDay()%7]}, ${d.getFullYear()}-${d.getMonth()}-${d.getDate()} ${d.getHours()%12}:${String(d.getMinutes()).padStart(2, '0')}`;
+	/* hour */
+	let h = d.getHours();
+	/* am/pm */
+	let m = h > 12 ? "pm" : "am";
+	/* fmt'd timestamp */
+	let fmt = `${days[d.getDay()%7]}, ${d.getFullYear()}-${d.getMonth()}-${d.getDate()} ${h}:${String(d.getMinutes()).padStart(2, '0')}${m}`;
 	e.innerHTML = fmt;
 };
