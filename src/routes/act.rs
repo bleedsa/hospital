@@ -192,3 +192,28 @@ pub async fn hide_thread(
 
     Ok(Redirect::to(&goto))
 }
+
+#[derive(Deserialize)]
+pub struct HidePostForm {
+    pub id: i64,
+}
+
+pub async fn hide_post(
+    C: CookieManager,
+    Form(f): Form<HidePostForm>,
+) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+
+    if !me.admin {
+        return err_page!(("you aren't an admin") => ("/"));
+    }
+
+    let p = db.get_post(f.id)?;
+    let t = db.get_thread(p.thread)?;
+    let goto = format!("/t/{}", t.id);
+
+    un!(db.hide_post(p.id), "{goto}");
+
+    Ok(Redirect::to(&goto))
+}
