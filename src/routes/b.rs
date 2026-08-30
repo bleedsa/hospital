@@ -14,7 +14,7 @@ pub async fn by_name<'a>(
     Ok(page!(db, {
         ("{n} :: view board"),
         r#"
-        <h1>{n}</h1>
+        <h1>/{n}/</h1>
         <p><span class="italic">{desc}</span></p>
         <div class="new-thread">
             <h3>new thread</h3>
