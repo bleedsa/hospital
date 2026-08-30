@@ -14,12 +14,17 @@ pub async fn by_name(
     Ok(page!(db, {
         ("{}", h!(u.name)),
         r#"
-        <h1>{name}</h1>
+        <h1>{name} {admin}</h1>
         <p>{bio}</p>
         <form method="post" action="/act/update-user">
             {update}
         </form>
         "#,
+        admin = if u.admin {
+            "(admin)"
+        } else {
+            ""
+        },
         name = h!(u.name),
         bio = h!(u.bio),
         /* if the user is me, show a form to update user information */

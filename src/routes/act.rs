@@ -181,7 +181,7 @@ pub async fn hide_thread(
     let me = db.me(&C)?;
 
     if !me.admin {
-        return err_page!(("you aren't an admin") => ("/"))
+        return err_page!(("you aren't an admin") => ("/"));
     }
 
     let t = db.get_thread(f.id)?;

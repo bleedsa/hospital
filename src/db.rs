@@ -618,10 +618,12 @@ impl Db {
         Ok(zipped.into_iter().rev().map(|(_, x)| x).collect())
     }
 
-    pub fn get_visible_threads(&self, board: i64) -> R<impl Iterator<Item=Thread>> {
+    pub fn get_visible_threads(
+        &self,
+        board: i64,
+    ) -> R<impl Iterator<Item = Thread>> {
         let ts = self.get_threads(board)?;
-        Ok(ts.into_iter()
-            .filter(|t| !t.hidden))
+        Ok(ts.into_iter().filter(|t| !t.hidden))
     }
 
     /** make a new thread */
@@ -741,6 +743,31 @@ impl Db {
 
         let map = un!(r.query_map((thread,), Post::new));
         map.map(|x| re!(x)).collect()
+    }
+
+    pub fn get_visible_posts(&self, thread: i64) -> R<Vec<Post>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from posts
+            where thread = ?1 and not hidden
+            "
+        ));
+
+        let map = un!(r.query_map((thread,), Post::new));
+        map.map(|x| re!(x)).collect()
+    }
+
+    pub fn hide_post(&self, id: i64) -> R<()> {
+        un!(self.sql.execute(
+            "
+            update posts
+            set hidden = true
+            where id = ?1
+            ",
+            (id,)
+        ));
+
+        Ok(())
     }
 
     pub fn update_bio<B>(&self, id: i64, bio: B) -> R<()>
@@ -1107,15 +1134,16 @@ pub mod test {
         let db = O("run/test/visible_threads.db");
         let u = db.new_user("u", "u").unwrap();
         let b = db.new_board("f", "g").unwrap();
-        
+
         for (n, h) in [
             ("a", true),
             ("b", false),
             ("c", false),
             ("d", true),
             ("e", false),
-            ("f", true)
-        ].into_iter()
+            ("f", true),
+        ]
+        .into_iter()
         {
             let t = db.new_thread(b.id, u.id, n, n, None).unwrap();
             if h {
@@ -1123,6 +1151,39 @@ pub mod test {
             }
         }
 
-        db.get_visible_threads(b.id).unwrap().for_each(|t| assert!(!t.hidden));
+        db.get_visible_threads(b.id)
+            .unwrap()
+            .for_each(|t| assert!(!t.hidden));
+    }
+
+    #[test]
+    fn visible_posts() {
+        let db = O("run/test/visible_posts.db");
+        let u = db.new_user("u", "u").unwrap();
+        let b = db.new_board("f", "g").unwrap();
+        let t = db.new_thread(b.id, u.id, "h", "i", None).unwrap();
+
+        for (n, h) in [
+            ("a", true),
+            ("b", false),
+            ("c", true),
+            ("d", true),
+            ("e", false),
+            ("f", false),
+            ("g", true),
+            ("h", false),
+        ]
+        .into_iter()
+        {
+            let p = db.new_post(t.id, u.id, n, None).unwrap();
+            if h {
+                db.hide_post(p.id).unwrap();
+            }
+        }
+
+        db.get_visible_posts(t.id)
+            .unwrap()
+            .into_iter()
+            .for_each(|p| assert!(!p.hidden));
     }
 }

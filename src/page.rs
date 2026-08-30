@@ -31,6 +31,9 @@ macro_rules! page {
                     </div>
                     <hr>
                     {body}
+                    <div class="bottom">
+                        <p>(c)skylar bleed(MPL/2.0)|<a href="https://github.com/bleedsa/hospital">src</a></p>
+                    </div>
                 </body>
                 <script>{js}</script>
             </html>
