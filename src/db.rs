@@ -718,7 +718,11 @@ impl Db {
             return err_fmt!("attempting to post in locked thread \"{}\"", thread.name);
         }
 
-        L!(("{} made new post with content \"{cont}\"", self.get_user(author)?.name) => {
+        L!((
+            "{} made new post in thread {} with content \"{cont}\"",
+            self.get_user(author)?.name,
+            thread.name
+        ) => {
             un!(self.sql.execute(
                 "
                 insert into posts (cont, hidden, file, board, thread, time, author)
