@@ -2,3 +2,6 @@
 port = 3333
 ip = "0.0.0.0"
 db = "run/hospital.db"
+
+[site]
+title = "badboy hospital"

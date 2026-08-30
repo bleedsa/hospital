@@ -1,0 +1,11 @@
+BADBOY HOSPITAL
+
+	A forum for friends :)
+
+RUN YOUR OWN
+
+	% cargo test
+	% vim etc/cfg.toml
+	% cargo run --bin new_board -- -b board_name -d description
+	% cargo run --bin new_user -- -u username -p password
+	% cargo run --release
