@@ -12,9 +12,9 @@ pub async fn by_name(
     let u = db.get_user_by_name(&n)?;
 
     Ok(page!(db, Some(me.id), {
-        ("{}", h!(u.name)),
+        ("/u/~{}", h!(u.name)),
         r#"
-        <h1>{name} {admin}</h1>
+        <h1>~{name} {admin}</h1>
         <p>{bio}</p>
         <form method="post" action="/act/update-user">
             {update}
