@@ -164,12 +164,14 @@ pub struct Server {
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct Site {
     pub title: String,
+    pub themes: String,
 }
 
 impl Default for Site {
     fn default() -> Self {
         Self {
             title: "badboy hospital".to_string(),
+            themes: "css/themes/".to_string(),
         }
     }
 }

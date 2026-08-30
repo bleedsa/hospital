@@ -143,6 +143,7 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Redirect> {
 pub struct UpdateUserForm {
     pub bio: String,
     pub pass: String,
+    pub theme: String,
 }
 
 pub async fn update_user(
@@ -153,7 +154,7 @@ pub async fn update_user(
     let me = db.me(&C)?;
     let goto = format!("/u/{}", me.name);
 
-    if f.bio.len() > 1024 || f.pass.len() > 64 {
+    if f.bio.len() > 1024 || f.pass.len() > 64 || f.theme.len() > 64 {
         return err_page!(("invalid user fields") => ("{goto}"));
     }
 
@@ -163,6 +164,10 @@ pub async fn update_user(
 
     if !f.pass.is_empty() {
         db.update_pass(me.id, &f.pass)?;
+    }
+
+    if !f.theme.is_empty() {
+        db.set_theme(me.id, &f.theme)?;
     }
 
     Ok(Redirect::to(&goto))
@@ -244,6 +249,24 @@ pub async fn lock_thread(
     } else {
         un!(db.lock_thread(t.id), "{goto}");
     }
+
+    Ok(Redirect::to(&goto))
+}
+
+#[derive(Deserialize)]
+pub struct SetThemeForm {
+    pub theme: String,
+}
+
+pub async fn set_theme(
+    C: CookieManager,
+    Form(f): Form<SetThemeForm>,
+) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+    let goto = format!("/u/{}", me.name);
+
+    un!(db.set_theme(me.id, &f.theme), "{goto}");
 
     Ok(Redirect::to(&goto))
 }

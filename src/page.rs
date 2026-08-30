@@ -3,12 +3,12 @@
 macro_rules! page {
     { ($($t:tt)*), $($b:tt)* } => {{
         use $crate::db::Db;
-        $crate::page!(Db::new()?, { ($($t)*), $($b)* })
+        $crate::page!(Db::new()?, None, { ($($t)*), $($b)* })
     }};
 
-    ($db:expr, { ($($t:tt)*), $($b:tt)* }) => {{
+    ($db:expr, $me:expr, { ($($t:tt)*), $($b:tt)* }) => {{
         use axum::response::Html;
-        use $crate::{pre::*, css::css, js};
+        use $crate::{pre::*, css, js};
 
         Html(format!(
             r#"
@@ -32,9 +32,7 @@ macro_rules! page {
                     <hr>
                     {body}
                     <div class="bottom">
-                        <span class="copyright">
-                            (c)<a href="http://badboy.institute/~skye" target="_blank">skylar bleed</a> 2026|<a href="https://raw.githubusercontent.com/bleedsa/hospital/refs/heads/master/LICENSE" target="_blank">Mozilla Public License/2.0</a>|<a href="https://github.com/bleedsa/hospital" target="_blank">view source</a>
-                        </span>
+                        (c)<a href="http://badboy.institute/~skye" target="_blank">skylar bleed</a> 2026|<a href="https://raw.githubusercontent.com/bleedsa/hospital/refs/heads/master/LICENSE" target="_blank">Mozilla Public License/2.0</a>|<a href="https://github.com/bleedsa/hospital" target="_blank">view source</a>
                     </div>
                 </body>
                 <script>{js}</script>
@@ -43,7 +41,7 @@ macro_rules! page {
             site_title = (&*CFG).title(),
             title = format!($($t)*),
             body = format!($($b)*),
-            css = css(),
+            css = css::css($me)?,
             js = js::base(),
             boards = $db.get_visible_boards()?
                 .into_iter()

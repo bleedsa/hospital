@@ -11,7 +11,7 @@ pub async fn by_name(
     let me = db.me(&C)?;
     let u = db.get_user_by_name(&n)?;
 
-    Ok(page!(db, {
+    Ok(page!(db, Some(me.id), {
         ("{}", h!(u.name)),
         r#"
         <h1>{name} {admin}</h1>
@@ -40,11 +40,24 @@ pub async fn by_name(
                         <td>password</td>
                         <td><input type="password" name="pass"></td>
                     </tr>
+                    <tr>
+                        <td>theme</td>
+                        <td>
+                            <select name="theme">{themes}</select>
+                        </td>
+                    </tr>
                 </table>
                 <input type="hidden" name="user" value="{id}">
                 <input type="submit" value="go">
                 "#,
                 id = me.id,
+                themes = css::get_theme_names()
+                    .map(|n| format!(
+                        r#"
+                        <option value="{n}">{n}</option>
+                        "#
+                    ))
+                    .collect::<String>(),
             )
         } else {
             String::new()

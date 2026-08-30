@@ -1,0 +1,7 @@
+:root {
+	--bg: white;
+	--fg: black;
+	--borders: black;
+	--a-clicked: purple;
+	--a-unclicked: blue;
+}

@@ -6,3 +6,4 @@ log_file = "run/log.txt"
 
 [site]
 title = "badboy hospital"
+themes = "css/themes/"

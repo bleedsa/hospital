@@ -1,7 +1,7 @@
 use axum::{
     Router,
-    routing::{get, post},
     extract::DefaultBodyLimit,
+    routing::{get, post},
 };
 use axum_cookie::prelude::*;
 use hospital::{pre::*, routes};
@@ -27,6 +27,7 @@ async fn main() -> R<()> {
         .route("/act/hide-thread", post(routes::act::hide_thread))
         .route("/act/lock-thread", post(routes::act::lock_thread))
         .route("/act/hide-post", post(routes::act::hide_post))
+        .route("/act/set-theme", post(routes::act::set_theme))
         .route("/dbg/user/{id}", get(routes::dbg::user))
         .route("/b/{name}", get(routes::b::by_name))
         .route("/t/{id}", get(routes::t::by_id))

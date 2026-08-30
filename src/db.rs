@@ -3,7 +3,7 @@ use axum_cookie::prelude::*;
 use image::ImageReader;
 use rusqlite::{Connection, Row, params};
 
-use crate::{passwd, pre::*, rand::rand_str};
+use crate::{passwd, pre::*, rand::rand_str, css::{self, THEMES}};
 use std::{fs, io::Cursor, path::Path};
 
 pub const SESSION_HASH_LEN: usize = 512;
@@ -16,6 +16,7 @@ pub struct User {
     pub hash: String,
     pub bio: String,
     pub admin: bool,
+    pub theme: Option<String>,
 }
 
 /** convert a `Row` to a `User` */
@@ -27,6 +28,7 @@ fn row2user<'a>(r: &Row<'a>) -> rusqlite::Result<User> {
         hash: r.get(2)?,
         admin: r.get(3)?,
         bio: if let Some(b) = b { b } else { String::new() },
+        theme: r.get(5)?,
     })
 }
 
@@ -114,16 +116,12 @@ impl Thread {
         })
     }
 
-    /** is this thread locked? 
+    /** is this thread locked?
      * wrapped because `Thread::locked` is an `Option` for compat with
      * the old db */
     #[inline(always)]
     pub fn locked(&self) -> bool {
-        if let Some(b) = self.locked {
-            b
-        } else {
-            false
-        }
+        if let Some(b) = self.locked { b } else { false }
     }
 }
 
@@ -191,7 +189,8 @@ impl Db {
                 name text not null,
                 hash text not null,
                 admin boolean not null,
-                bio text
+                bio text,
+                theme text
             );
             "#,
             r#"
@@ -715,11 +714,14 @@ impl Db {
 
         if thread.locked() {
             L!(("attempting to post in locked thread \"{}\"...erroring", thread.name) => ());
-            return err_fmt!("attempting to post in locked thread \"{}\"", thread.name);
+            return err_fmt!(
+                "attempting to post in locked thread \"{}\"",
+                thread.name
+            );
         }
 
         L!((
-            "{} made new post in thread {} with content \"{cont}\"",
+            "{} made new post in thread \"{}\" with content \"{cont}\"",
             self.get_user(author)?.name,
             thread.name
         ) => {
@@ -762,6 +764,24 @@ impl Db {
             re!(p)
         } else {
             err_fmt!("Db::get_post({id}): post not found")
+        }
+    }
+
+    pub fn get_theme(&self, id: i64) -> R<String> {
+        let r = un!(self.sql.prepare(
+            "
+            select theme from users
+            where id = ?1
+            "
+        ))
+            .query_map((id,), |r| r.get(0))
+            .map(|mut i| i.next());
+
+        if let Some(t) = un!(r) {
+            let o = t.unwrap_or(String::new());
+            Ok(o)
+        } else {
+            err_fmt!("Db::get_theme({id}): theme not found")
         }
     }
 
@@ -887,6 +907,31 @@ impl Db {
                 where id = ?1
                 ",
                 (id,)
+            ));
+        });
+
+        Ok(())
+    }
+
+    pub fn set_theme<T>(&self, id: i64, t: T) -> R<()>
+    where
+        T: AsRef<str>,
+    {
+        let t = t.as_ref();
+        let u = self.get_user(id)?;
+
+        if let Err(e) = css::get_theme(t) {
+            return err_fmt!("failed to get theme \"{t}\": {e}");
+        }
+
+         L!(("setting {}'s theme to {t}", u.name) => {
+            un!(self.sql.execute(
+                "
+                update users
+                set theme = ?1
+                where id = ?2
+                ",
+                (t, id)
             ));
         });
 
@@ -1296,5 +1341,37 @@ pub mod test {
         db.unlock_thread(t.id).unwrap();
         let t = db.get_thread(t.id).unwrap();
         assert!(!t.locked());
+    }
+
+    #[test]
+    fn set_user_theme() {
+        let db = O("run/test/set_user_theme.db");
+        let u = db.new_user("a", "a").unwrap();
+
+        db.set_theme(u.id, "default").unwrap();
+        let u = db.get_user(u.id).unwrap();
+
+        assert_eq!(&u.theme.unwrap(), "default");
+    }
+
+    #[test]
+    #[should_panic]
+    fn set_invalid_theme() {
+        let db = O("run/test/set_invalid_theme.db");
+        let u = db.new_user("a", "b").unwrap();
+
+        db.set_theme(u.id, "abcdef").unwrap();
+    }
+
+    #[test]
+    fn get_theme() {
+        let db = O("run/test/get_theme.db");
+        let u = db.new_user("a", "a").unwrap();
+
+        db.set_theme(u.id, "blue screen of death").unwrap();
+
+        let t = db.get_theme(u.id).unwrap();
+
+        assert_eq!("blue screen of death", t);
     }
 }

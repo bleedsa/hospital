@@ -11,7 +11,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
     let b = un!(db.get_board(t.board), "{goto}");
     let name = &t.name;
 
-    Ok(page!(db, {
+    Ok(page!(db, Some(me.id), {
          ("{name}"),
          r#"
         <h1><a href="/b/{bname}">/{bname}/</a></h1>

@@ -36,7 +36,7 @@ path = "bin/new_board.rs"
 
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
-axum = { version = "0.8.9", features = ["multipart"] }
+axum = { version = "0.8.9", features = ["macros", "multipart"] }
 axum-cookie = "0.3.0"
 axum-extra = { version = "0.12.6", features = ["cookie"] }
 chrono = "0.4.45"

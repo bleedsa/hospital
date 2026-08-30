@@ -1,5 +1,24 @@
 body {
 	font-family: monospace;
+	background-color: var(--bg);
+	color: var(--fg);
+}
+
+hr {
+	display: block;
+	height: 1px;
+	border: 0;
+	border-top: 1px solid var(--borders);
+	margin: 1em 0;
+	padding: 0;
+}
+
+a:link {
+	color: var(--a-uncliked);
+}
+
+a:visited {
+	color: var(--a-unclicked);
 }
 
 .bold {
@@ -20,7 +39,7 @@ body {
 }
 
 .post-box {
-	border: 1px solid black;
+	border: 1px solid var(--borders);
 	padding: 5px;
 	padding-left: 20px;
 	padding-right: 20px;

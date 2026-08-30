@@ -11,7 +11,7 @@ pub async fn by_name<'a>(
     let b = un!(db.get_board_by_name(&n), "/");
     let me = un!(db.me(&c), "/b/{}", b.id);
 
-    Ok(page!(db, {
+    Ok(page!(db, Some(me.id), {
         ("{n} :: view board"),
         r#"
         <h1>/{n}/</h1>

@@ -1,11 +1,16 @@
-use crate::{db::Db, pre::*};
 use axum::{extract::Path, response::Html};
+use axum_cookie::prelude::*;
 
-pub async fn user(Path(id): Path<i64>) -> H<Html<String>> {
+use crate::{db::Db, pre::*};
+
+pub async fn user(
+    C: CookieManager,
+    Path(id): Path<i64>
+) -> H<Html<String>> {
     let db = un!(Db::new());
     let u = un!(db.get_user(id));
 
-    Ok(page!(db, {
+    Ok(page!(db, Some(db.me(&C)?.id), {
         ("user {id}"),
         r#"
         <h1>user {id}</h1>
