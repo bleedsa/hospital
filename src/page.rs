@@ -28,11 +28,14 @@ macro_rules! page {
                         <a href="/login">login</a>
                         ::
                         {boards}
+                        ::
                     </div>
                     <hr>
                     {body}
                     <div class="bottom">
-                        <p>(c)skylar bleed 2026(MPL/2.0)|<a href="https://github.com/bleedsa/hospital">src</a></p>
+                        <span class="copyright">
+                            (c)<a href="http://badboy.institute/~skye" target="_blank">skylar bleed</a> 2026|<a href="https://raw.githubusercontent.com/bleedsa/hospital/refs/heads/master/LICENSE" target="_blank">Mozilla Public License/2.0</a>|<a href="https://github.com/bleedsa/hospital" target="_blank">view source</a>
+                        </span>
                     </div>
                 </body>
                 <script>{js}</script>

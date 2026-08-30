@@ -37,3 +37,8 @@ body {
 .post-content {
 	white-space: pre-wrap;
 }
+
+.copyright {
+	font-size: 0.75em;
+	font-style: italic;
+}
