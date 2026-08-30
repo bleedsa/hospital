@@ -618,6 +618,12 @@ impl Db {
         Ok(zipped.into_iter().rev().map(|(_, x)| x).collect())
     }
 
+    pub fn get_visible_threads(&self, board: i64) -> R<impl Iterator<Item=Thread>> {
+        let ts = self.get_threads(board)?;
+        Ok(ts.into_iter()
+            .filter(|t| !t.hidden))
+    }
+
     /** make a new thread */
     pub fn new_thread<N, C>(
         &self,
@@ -769,6 +775,19 @@ impl Db {
             where id = ?2
             ",
             (hash, id)
+        ));
+
+        Ok(())
+    }
+
+    pub fn hide_thread(&self, id: i64) -> R<()> {
+        un!(self.sql.execute(
+            "
+            update threads
+            set hidden = true
+            where id = ?1
+            ",
+            (id,)
         ));
 
         Ok(())
@@ -1070,5 +1089,40 @@ pub mod test {
         db.update_pass(u.id, "password123").unwrap();
         let u = db.get_user(u.id).unwrap();
         assert!(passwd::verify("password123", u.hash).unwrap());
+    }
+
+    #[test]
+    fn hide_thread() {
+        let db = O("run/test/hide_thread.db");
+        let u = db.new_user("u", "u").unwrap();
+        let b = db.new_board("u", "u").unwrap();
+        let t = db.new_thread(b.id, u.id, "test", "test", None).unwrap();
+        let _ = db.hide_thread(t.id).unwrap();
+        let t = db.get_thread(t.id).unwrap();
+        assert!(t.hidden);
+    }
+
+    #[test]
+    fn visible_threads() {
+        let db = O("run/test/visible_threads.db");
+        let u = db.new_user("u", "u").unwrap();
+        let b = db.new_board("f", "g").unwrap();
+        
+        for (n, h) in [
+            ("a", true),
+            ("b", false),
+            ("c", false),
+            ("d", true),
+            ("e", false),
+            ("f", true)
+        ].into_iter()
+        {
+            let t = db.new_thread(b.id, u.id, n, n, None).unwrap();
+            if h {
+                db.hide_thread(t.id).unwrap();
+            }
+        }
+
+        db.get_visible_threads(b.id).unwrap().for_each(|t| assert!(!t.hidden));
     }
 }

@@ -167,3 +167,28 @@ pub async fn update_user(
 
     Ok(Redirect::to(&goto))
 }
+
+#[derive(Deserialize)]
+pub struct HideThreadForm {
+    pub id: i64,
+}
+
+pub async fn hide_thread(
+    C: CookieManager,
+    Form(f): Form<HideThreadForm>,
+) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+
+    if !me.admin {
+        return err_page!(("you aren't an admin") => ("/"))
+    }
+
+    let t = db.get_thread(f.id)?;
+    let b = db.get_board(t.board)?;
+    let goto = format!("/b/{}", b.name);
+
+    un!(db.hide_thread(t.id), "{goto}");
+
+    Ok(Redirect::to(&goto))
+}

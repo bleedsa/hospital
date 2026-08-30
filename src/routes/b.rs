@@ -9,9 +9,7 @@ pub async fn by_name<'a>(
 ) -> H<Html<String>> {
     let db = un!(Db::new(), "/");
     let b = un!(db.get_board_by_name(&n), "/");
-    let _ = un!(db.me(&c), "/b/{}", b.id);
-
-    let threads = un!(db.get_threads(b.id), "/b/{}", b.id);
+    let me = un!(db.me(&c), "/b/{}", b.id);
 
     Ok(page!(db, {
         ("{n} :: view board"),
@@ -55,8 +53,7 @@ pub async fn by_name<'a>(
         </div>
         "#,
         desc = b.desc,
-        threads = threads
-            .into_iter()
+        threads = un!(db.get_visible_threads(b.id), "/b/{}", b.id)
             .map(|t| Ok(format!(
                 r#"
                 <div class="thread-box">
@@ -64,6 +61,9 @@ pub async fn by_name<'a>(
                         <a href="/b/{bname}#{id}">#{id}</a>::<a href="/t/{id}">{name}</a>::<a href="/u/{uname}">{uname}</a>@<span class="unix-time">{time}</span>
                     </h3>
                     <p>{cont}</p>
+                    <form action="/act/hide-thread" method="post">
+                        {hide}
+                    </form>
                 </div>
                 "#,
                 id = t.id,
@@ -80,6 +80,17 @@ pub async fn by_name<'a>(
                         L
                     };
                     format!("{}{}", h!(&t.cont[..z]), if z == M { "..." } else { "" })
+                },
+                hide = if me.admin {
+                    format!(
+                        r#"
+                        <input type="submit" value="hide">
+                        <input type="hidden" name="id" value="{id}">
+                        "#,
+                        id = t.id,
+                    )
+                } else {
+                    String::new()
                 },
             )))
             .collect::<R<String>>()?,
