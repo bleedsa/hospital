@@ -17,7 +17,7 @@ for (let i=0;i<times.length;i++) {
 	/* am/pm */
 	let m=h>12?"pm":"am";
 	/* fmt'd timestamp */
-	let fmt=`${days[d.getDay()%7]}, ${d.getFullYear()}-${d.getMonth()}-${d.getDate()} ${h}:${String(d.getMinutes()).padStart(2, '0')}${m}`;
+	let fmt=`${days[d.getDay()%7]}, ${d.getFullYear()}-${d.getMonth()}-${d.getDate()} ${h%12}:${String(d.getMinutes()).padStart(2, '0')}${m}`;
 	/* set */
 	e.innerHTML=fmt;
 };
