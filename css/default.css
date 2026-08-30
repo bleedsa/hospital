@@ -33,3 +33,7 @@ body {
 	height: 15px;
 	font-size: 8px;
 }
+
+.post-content {
+	white-space: pre-wrap;
+}
