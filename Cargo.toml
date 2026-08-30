@@ -34,6 +34,11 @@ name = "new_board"
 test = false
 path = "bin/new_board.rs"
 
+[[bin]]
+name = "set_pass"
+test = false
+path = "bin/set_pass.rs"
+
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = { version = "0.8.9", features = ["macros", "multipart"] }
