@@ -19,22 +19,26 @@ macro_rules! page {
                     <meta charset="utf-8">
                     <style>{css}</style>
                 </head>
+
                 <body>
                     <div class="top">
                         <span class="bold">
                             <a href="/">{site_title}</a>
                         </span>
                         ::
-                        <a href="/login">login</a>
+                        {login_user} 
                         ::
                         {boards}
                     </div>
                     <hr>
+
                     {body}
+
                     <div class="bottom">
                         (c)<a href="http://badboy.institute/~skye" target="_blank">skylar bleed</a> 2026|<a href="https://raw.githubusercontent.com/bleedsa/hospital/refs/heads/master/LICENSE" target="_blank">Mozilla Public License/2.0</a>|<a href="https://github.com/bleedsa/hospital" target="_blank">view source</a>
                     </div>
                 </body>
+
                 <script>{js}</script>
             </html>
             "#,
@@ -43,6 +47,11 @@ macro_rules! page {
             body = format!($($b)*),
             css = css::css($me)?,
             js = js::base(),
+            login_user = if let Some(id) = $me {
+                format!(r#"<a href="/u/~{n}">~{n}</a>"#, n = un!($db.get_user(id)).name)
+            } else {
+                r#"<a href="/login">login</a>"#.into()
+            },
             boards = $db.get_visible_boards()?
                 .into_iter()
                 .map(|b| format!(

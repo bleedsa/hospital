@@ -17,8 +17,13 @@ macro_rules! invalid_str {
 /** index/homepage (GET /) */
 pub async fn index(C: CookieManager) -> H<Html<String>> {
     let db = Db::new()?;
-    let me = db.me(&C)?;
-    Ok(page!(db, Some(me.id), {
+    let me = if let Ok(x) = db.me(&C) {
+        Some(x)
+    } else {
+        None
+    };
+
+    Ok(page!(db, me.as_ref().map(|m| m.id), {
         ("index"),
         r#"
         <h1>{title}.</h1>
