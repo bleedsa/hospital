@@ -80,6 +80,11 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
         None
     };
 
+    /* final safety */
+    if let None = file && cont.is_empty() {
+        return err_page!(("you cannot make empty posts!") => ("{goto}"));
+    }
+
     let p = un!(
         db.new_post(thread.id, me.id, &cont, file.cloned()),
         "{goto}"
