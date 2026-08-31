@@ -41,7 +41,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
          } else {
              "".to_string()
          },
-         cont = h!(t.cont),
+         cont = x::threads(h!(t.cont)),
          back = format!(r#"<p><a href="/b/{}#{}">go back</a></p>"#, b.name, t.id),
          new_post = if t.locked() {
              r#"<h3>this thread is locked. you cannot post in it."#.into()
@@ -95,7 +95,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                  tid = t.id,
                  uname = h!(format!("~{}", un!(db.get_user(p.author)).name)),
                  time = format!(r#"<span class="unix-time">{}</span>"#, p.time),
-                 cont = un!(x::posts(t.id, h!(p.cont))),
+                 cont = x::posts(t.id, h!(p.cont)),
                  img = if let Some(id) = p.file {
                      let f = if let Ok(f) = db.get_file(id) {
                          f
