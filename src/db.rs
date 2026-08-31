@@ -604,6 +604,38 @@ impl Db {
         self.get_board(id)
     }
 
+    /** make a thread visible */
+    pub fn visible_thread(&self, id: i64) -> R<Thread> {
+        let _ = self.get_thread(id)?;
+
+        un!(self.sql.execute(
+            "
+            update threads
+            set hidden = false
+            where id = ?1
+            ",
+            (id,)
+        ));
+
+        self.get_thread(id)
+    }
+
+    /** make a post visible */
+    pub fn visible_post(&self, id: i64) -> R<Post> {
+        let _ = self.get_post(id)?;
+
+        un!(self.sql.execute(
+            "
+            update posts
+            set hidden = false
+            where id = ?1
+            ",
+            (id,)
+        ));
+
+        self.get_post(id)
+    }
+
     /** add a new file to the db */
     pub fn new_file(&self, file: Bytes) -> R<File> {
         let vec = file.to_vec();
@@ -1469,5 +1501,34 @@ pub mod test {
         db.rm_admin(u.id).unwrap();
         let u = db.get_user(u.id).unwrap();
         assert!(!u.admin);
+    }
+
+    #[test]
+    fn visible_thread() {
+        let db = O("run/test/visible_thread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+        let _ = db.hide_thread(t.id).unwrap();
+        let t = db.get_thread(t.id).unwrap();
+        assert!(t.hidden);
+
+        let t = db.visible_thread(t.id).unwrap();
+        assert!(!t.hidden);
+    }
+
+    #[test]
+    fn visible_post() {
+        let db = O("run/test/visible_post.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+        let p = db.new_post(t.id, u.id, "a", None).unwrap();
+        let _ = db.hide_post(p.id).unwrap();
+        let p = db.get_post(p.id).unwrap();
+        assert!(p.hidden);
+
+        let p = db.visible_post(p.id).unwrap();
+        assert!(!p.hidden);
     }
 }
