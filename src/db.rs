@@ -4,7 +4,7 @@ use image::ImageReader;
 use rusqlite::{Connection, Row, params};
 
 use crate::{css, passwd, pre::*, rand::rand_str};
-use std::{fs, io::Cursor, path::Path, fmt};
+use std::{fmt, fs, io::Cursor, path::Path};
 
 pub const SESSION_HASH_LEN: usize = 512;
 
@@ -157,7 +157,19 @@ impl Thread {
 
 impl fmt::Display for Thread {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}|{:?}|{:?}|{}|{:?}|{}|{}|{}|{}", self.id, self.name, self.cont, self.hidden, self.file, self.board, self.time, self.author, self.locked())
+        write!(
+            f,
+            "{}|{:?}|{:?}|{}|{:?}|{}|{}|{}|{}",
+            self.id,
+            self.name,
+            self.cont,
+            self.hidden,
+            self.file,
+            self.board,
+            self.time,
+            self.author,
+            self.locked()
+        )
     }
 }
 
