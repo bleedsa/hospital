@@ -4,7 +4,7 @@ use image::ImageReader;
 use rusqlite::{Connection, Row, params};
 
 use crate::{css, passwd, pre::*, rand::rand_str};
-use std::{fs, io::Cursor, path::Path};
+use std::{fs, io::Cursor, path::Path, fmt};
 
 pub const SESSION_HASH_LEN: usize = 512;
 
@@ -17,6 +17,22 @@ pub struct User {
     pub bio: String,
     pub admin: bool,
     pub theme: Option<String>,
+}
+
+impl User {
+    pub fn fields() -> &'static str {
+        "id|name|hash|bio|admin|theme"
+    }
+}
+
+impl fmt::Display for User {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}|{}|{}|{}|{}|{:?}",
+            self.id, self.name, self.hash, self.bio, self.admin, self.theme
+        )
+    }
 }
 
 /** convert a `Row` to a `User` */
@@ -69,6 +85,16 @@ impl Board {
             desc: r.get(2)?,
             hidden: r.get(3)?,
         })
+    }
+
+    pub fn fields() -> &'static str {
+        "id|name|desc|hidden"
+    }
+}
+
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}|{}|{}|{}", self.id, self.name, self.desc, self.hidden)
     }
 }
 
@@ -123,6 +149,16 @@ impl Thread {
     pub fn locked(&self) -> bool {
         if let Some(b) = self.locked { b } else { false }
     }
+
+    pub fn fields() -> &'static str {
+        "id|name|content|hidden|file|board|time|author|locked"
+    }
+}
+
+impl fmt::Display for Thread {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}|{:?}|{:?}|{}|{:?}|{}|{}|{}|{}", self.id, self.name, self.cont, self.hidden, self.file, self.board, self.time, self.author, self.locked())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -150,6 +186,27 @@ impl Post {
             time: r.get(6)?,
             author: r.get(7)?,
         })
+    }
+
+    pub fn fields() -> &'static str {
+        "id|cont|hidden|file|board|thread|time|author"
+    }
+}
+
+impl fmt::Display for Post {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}|{:?}|{}|{:?}|{}|{}|{}|{}",
+            self.id,
+            self.cont,
+            self.hidden,
+            self.file,
+            self.board,
+            self.thread,
+            self.time,
+            self.author
+        )
     }
 }
 

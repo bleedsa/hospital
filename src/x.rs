@@ -17,42 +17,47 @@ static LINKRE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /** mentions ie ~phoebe */
-static MENTIONRE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"~[a-zA-Z0-9_\-@~]+"#).unwrap()
-});
+static MENTIONRE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"~[a-zA-Z0-9_\-@~]+"#).unwrap());
 
 /** replace links */
 #[inline(always)]
 fn links<X>(x: X) -> String
 where
-    X: AsRef<str>
+    X: AsRef<str>,
 {
-    (&*LINKRE).replace_all(x.as_ref(), |C: &Captures| {
-        let a = &C[0];
-        format!(r#"<a href="{un}" target="_blank">{a}</a>"#, un = unh!(a))
-    }).to_string()
+    (&*LINKRE)
+        .replace_all(x.as_ref(), |C: &Captures| {
+            let a = &C[0];
+            format!(r#"<a href="{un}" target="_blank">{a}</a>"#, un = unh!(a))
+        })
+        .to_string()
 }
 
 /** replace replies */
 fn replies<X>(tid: i64, x: X) -> String
 where
-    X: AsRef<str>
+    X: AsRef<str>,
 {
-    (&*REPLYRE).replace_all(x.as_ref(), |C: &Captures| {
-        let r = &C[0];
-        let id = &r[8..];
-        format!(r#"<a href="/t/{tid}#{id}">{r}</a>"#)
-    }).to_string()
+    (&*REPLYRE)
+        .replace_all(x.as_ref(), |C: &Captures| {
+            let r = &C[0];
+            let id = &r[8..];
+            format!(r#"<a href="/t/{tid}#{id}">{r}</a>"#)
+        })
+        .to_string()
 }
 
 /** replace mentions */
 fn mentions<X>(x: X) -> String
 where
-    X: AsRef<str>
+    X: AsRef<str>,
 {
-    (&*MENTIONRE).replace_all(x.as_ref(), |C: &Captures| {
-        format!(r#"<a href="/u/{r}">{r}</a>"#, r = &C[0])
-    }).to_string()
+    (&*MENTIONRE)
+        .replace_all(x.as_ref(), |C: &Captures| {
+            format!(r#"<a href="/u/{r}">{r}</a>"#, r = &C[0])
+        })
+        .to_string()
 }
 
 pub fn posts<X>(tid: i64, x: X) -> String
@@ -64,7 +69,7 @@ where
 
 pub fn threads<X>(x: X) -> String
 where
-    X: AsRef<str>
+    X: AsRef<str>,
 {
     mentions(links(x.as_ref()))
 }
@@ -82,9 +87,9 @@ fn post_regex() {
     for (x, y) in [
         (">>123", r#"<a href="/t/0#123">&gt;&gt;123</a>"#),
         ("http://test.com/test", &a1),
-        ("~phoebe",  r#"<a href="/u/~phoebe">~phoebe</a>"#),
+        ("~phoebe", r#"<a href="/u/~phoebe">~phoebe</a>"#),
         ("https://google.com", &a2),
-   ]
+    ]
     .into_iter()
     {
         let r = posts(0, h!(x));
@@ -98,10 +103,9 @@ fn thread_regex() {
         (">>123", r#"&gt;&gt;123"#),
         ("~phoebe", r#"<a href="/u/~phoebe">~phoebe</a>"#),
     ]
-        .into_iter()
+    .into_iter()
     {
         let r = threads(h!(x));
         assert_eq!(&r, y);
     }
 }
-
