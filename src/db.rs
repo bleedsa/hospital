@@ -898,6 +898,19 @@ impl Db {
         map.map(|x| re!(x)).collect()
     }
 
+    pub fn get_post_replies(&self, id: i64) -> R<Vec<i64>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select id from posts
+            where cont like concat('%',?1,'%')
+            "
+        ));
+
+        un!(r.query_map((id.to_string(),), |r| r.get(0)))
+            .map(|x| re!(x))
+            .collect()
+    }
+
     pub fn get_visible_posts(&self, thread: i64) -> R<Vec<Post>> {
         let mut r = un!(self.sql.prepare(
             "
@@ -1530,5 +1543,20 @@ pub mod test {
 
         let p = db.visible_post(p.id).unwrap();
         assert!(!p.hidden);
+    }
+
+    #[test]
+    fn get_replies() {
+        let db = O("run/test/get_replies.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+        let p = db.new_post(t.id, u.id, "a", None).unwrap();
+        let r1 = db.new_post(t.id, u.id, &format!(">>{}", p.id), None).unwrap();
+        let r2 = db.new_post(t.id, u.id, &format!("abcdefg >>{} 12931", p.id), None).unwrap();
+
+        let rs = db.get_post_replies(p.id).unwrap();
+        assert_eq!(r1.id, rs[0]);
+        assert_eq!(r2.id, rs[1]);
     }
 }
