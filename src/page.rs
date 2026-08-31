@@ -8,7 +8,7 @@ pub fn hidden_boards(db: Db) -> R<String> {
             .into_iter()
             .map(|b| format!(r#"<a href="/b/{n}">/{n}/</a>"#, n = b.name))
             .collect::<Vec<_>>()
-            .join("\\")
+            .join(" \\ ")
     ))
 }
 
