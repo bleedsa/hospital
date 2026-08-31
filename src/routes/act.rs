@@ -217,15 +217,39 @@ pub async fn hide_post(
     let db = Db::new()?;
     let me = db.me(&C)?;
 
-    if !me.admin {
-        return err_page!(("you aren't an admin") => ("/"));
-    }
-
     let p = db.get_post(f.id)?;
     let t = db.get_thread(p.thread)?;
     let goto = format!("/t/{}", t.id);
 
+    if !me.admin {
+        return err_page!(("you aren't an admin") => ("{goto}"));
+    }
+
     un!(db.hide_post(p.id), "{goto}");
+
+    Ok(Redirect::to(&goto))
+}
+
+#[derive(Deserialize)]
+pub struct HideBoardForm {
+    pub id: i64,
+}
+
+pub async fn hide_board(
+    C: CookieManager,
+    Form(f): Form<HideBoardForm>,
+) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+
+    let b = db.get_board(f.id)?;
+    let goto = format!("/b/{}", b.name);
+
+    if !me.admin {
+        return err_page!(("you aren't an admin") => ("{goto}"));
+    }
+
+    un!(db.hide_board(b.id), "{goto}");
 
     Ok(Redirect::to(&goto))
 }

@@ -65,6 +65,7 @@ pub async fn admin(C: CookieManager) -> H<Html<String>> {
 pub struct UnhideForm {
     pub id: i64,
     pub ty: char,
+    pub goto: Option<String>,
 }
 
 pub async fn unhide(
@@ -86,5 +87,9 @@ pub async fn unhide(
         t => return err_page!(("invalid form type: {t}") => ("/admin")),
     };
 
-    Ok(Redirect::to("/admin"))
+    Ok(Redirect::to(if let Some(g) = f.goto.as_ref() {
+        g
+    } else {
+        "/admin"
+    }))
 }

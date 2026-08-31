@@ -16,6 +16,8 @@ pub async fn by_name<'a>(
         r#"
         <h1>/{n}/</h1>
         <p><span class="italic">{desc}</span></p>
+        {hide_board}
+ 
         <div class="new-thread">
             <h3>new thread</h3>
             <form
@@ -53,6 +55,34 @@ pub async fn by_name<'a>(
         </div>
         "#,
         desc = b.desc,
+        hide_board = if me.admin {
+            if b.hidden {
+                format!(
+                    r#"
+                    <form action="/admin/unhide" method="post">
+                        <input type="submit" value="unhide board">
+                        <input type="hidden" name="id" value="{id}">
+                        <input type="hidden" name="ty" value="b">
+                        <input type="hidden" name="goto" value="/b/{name}">
+                    </form>
+                    "#,
+                    id = b.id,
+                    name = b.name,
+                )
+            } else {
+                format!(
+                    r#"
+                    <form action="/act/hide-board" method="post">
+                        <input type="submit" value="hide board">
+                        <input type="hidden" name="id" value="{}">
+                    </form>
+                    "#,
+                    b.id
+                )
+            }
+        } else {
+            String::new()
+        },
         threads = un!(db.get_visible_threads(b.id), "/b/{}", b.id)
             .map(|t| Ok(format!(
                 r#"
