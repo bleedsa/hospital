@@ -8,6 +8,7 @@ pub mod dbg;
 pub mod i;
 pub mod t;
 pub mod u;
+pub mod admin;
 
 #[macro_export]
 macro_rules! invalid_str {
@@ -32,9 +33,8 @@ pub async fn index(C: CookieManager) -> H<Html<String>> {
 
 pub async fn login(C: CookieManager) -> H<Html<String>> {
     let db = Db::new()?;
-    let me = db.me(&C)?;
 
-    Ok(page!(db, Some(me.id), {
+    Ok(page!(db, None, {
         ("login"),
         r#"
         <h1>login.</h1>

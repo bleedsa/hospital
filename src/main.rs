@@ -20,6 +20,7 @@ async fn main() -> R<()> {
     /* create the routes */
     let app = Router::new()
         .route("/login", get(routes::login))
+        .route("/admin", get(routes::admin::main))
         .route("/act/login", post(routes::act::login))
         .route("/act/new-thread", post(routes::act::new_thread))
         .route("/act/new-post", post(routes::act::new_post))

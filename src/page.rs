@@ -26,7 +26,7 @@ macro_rules! page {
                             <a href="/">{site_title}</a>
                         </span>
                         ::
-                        {login_user} 
+                        {login_user}{admin_panel}
                         ::
                         {boards}
                     </div>
@@ -64,6 +64,16 @@ macro_rules! page {
                 ))
                 .collect::<Vec<_>>()
                 .join("\\"),
+            admin_panel = if let Some(id) = $me {
+                if $db.get_user(id)?.admin {
+                    "|".to_owned() +
+                        r#"<span class="admin-panel-a"><a href="/admin">admin panel</a></span>"#
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            },
         ))
     }};
 }

@@ -1552,8 +1552,12 @@ pub mod test {
         let b = db.new_board("a", "a").unwrap();
         let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
         let p = db.new_post(t.id, u.id, "a", None).unwrap();
-        let r1 = db.new_post(t.id, u.id, &format!(">>{}", p.id), None).unwrap();
-        let r2 = db.new_post(t.id, u.id, &format!("abcdefg >>{} 12931", p.id), None).unwrap();
+        let r1 = db
+            .new_post(t.id, u.id, &format!(">>{}", p.id), None)
+            .unwrap();
+        let r2 = db
+            .new_post(t.id, u.id, &format!("abcdefg >>{} 12931", p.id), None)
+            .unwrap();
 
         let rs = db.get_post_replies(p.id).unwrap();
         assert_eq!(r1.id, rs[0]);
