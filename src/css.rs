@@ -1,33 +1,38 @@
-use crate::{Site, db::Db, pre::*};
-use std::{collections::HashMap, fs, sync::LazyLock};
+use crate::{db::Db, pre::*};
+use std::{collections::HashMap, fs, sync::LazyLock, path::Path};
 
 /** include the default css as a static str. RAWDOG. */
 static DEFAULT_CSS: &str = include_str!("../css/base.css");
 
-fn theme_path(f: &str) -> String {
-    let d = (&*CFG).site.clone().unwrap_or(Site::default()).themes;
-    format!("{d}/{f}.css")
-}
-
-pub static THEMES: LazyLock<HashMap<&'static str, String>> =
+pub static THEMES: LazyLock<HashMap<String, String>> =
     LazyLock::new(|| {
         let mut r = HashMap::new();
 
-        for (n, f) in [
-            ("blue screen of death", "blue"), ("default", "default"),
-            ("blood", "red"),
-            ("black", "black"),
-        ]
-            .into_iter()
-        {
-            let p = theme_path(f);
-            let c = if let Ok(x) = fs::read_to_string(&p) {
-                x
-            } else {
-                continue;
-            };
+        macro_rules! U {
+            ($x:expr) => {{
+                U!($x, Ok)
+            }};
 
-            r.insert(n, c);
+            ($x:expr, $q:ident) => {{
+                if let $q(x) = $x {
+                    x
+                } else {
+                    return r;
+                }
+            }};
+        }
+
+        for e in U!(fs::read_dir(&(&*CFG).site.themes)) {
+            let d = U!(e);
+            let p = d.path();
+
+            if p.is_file() {
+                let f = U!(fs::read_to_string(&p));
+                let n = Path::new(U!(p.file_name(), Some));
+                let n = U!(n.file_prefix(), Some).to_str();
+                let n = U!(n, Some).to_string();
+                r.insert(n, f);
+            }
         }
 
         r
@@ -46,11 +51,11 @@ where
         }
     }
 
-    err_fmt!("theme \"{n}\" not found (no {})", theme_path(n))
+    err_fmt!("theme \"{n}\" not found (no {}/{})", (&*CFG).site.themes, n)
 }
 
 pub fn get_theme_names() -> impl Iterator<Item = &'static str> {
-    (&*THEMES).into_iter().map(|(n, _)| *n)
+    (&*THEMES).into_iter().map(|(n, _)| n.as_str())
 }
 
 /** get the css stylesheet as a string to inject into <style> in page!{} */

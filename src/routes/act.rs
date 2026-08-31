@@ -157,7 +157,7 @@ pub async fn update_user(
 ) -> H<Redirect> {
     let db = Db::new()?;
     let me = db.me(&C)?;
-    let goto = format!("/u/{}", me.name);
+    let goto = format!("/u/~{}", me.name);
 
     if f.bio.len() > 1024 || f.pass.len() > 64 || f.theme.len() > 64 {
         return err_page!(("invalid user fields") => ("{goto}"));
@@ -269,7 +269,7 @@ pub async fn set_theme(
 ) -> H<Redirect> {
     let db = Db::new()?;
     let me = db.me(&C)?;
-    let goto = format!("/u/{}", me.name);
+    let goto = format!("/u/~{}", me.name);
 
     un!(db.set_theme(me.id, &f.theme), "{goto}");
 

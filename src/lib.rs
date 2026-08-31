@@ -178,7 +178,7 @@ impl Default for Site {
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct Cfg {
-    pub site: Option<Site>,
+    pub site: Site,
     pub server: Server,
 }
 
@@ -212,8 +212,8 @@ impl Cfg {
     }
 
     #[inline(always)]
-    pub fn title(&self) -> String {
-        self.site.clone().unwrap_or(Site::default()).title.clone()
+    pub fn title(&self) -> &str {
+        &self.site.title
     }
 }
 
