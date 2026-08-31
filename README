@@ -10,3 +10,27 @@ RUN YOUR OWN
 	% cargo run --bin new_user -- -u username -p password
 	% cargo run --bin new_admin -- -u username
 	% cargo run --release
+
+ADMINISTRATOR SCRIPTS
+
+	These scripts manage the database. This forum is meant to be closed access, so to add users,
+	make admins, add boards, etc, you must run these scripts.
+
+	______________________________________________________________________________________________
+	| cargo run --bin {}   | description                | opts
+	=----------------------=----------------------------=-----------------------------------------
+	] new_board            | creates a new board        | -b name -d desc
+	] new_user             | creates a new user         | -u user -p pass
+	] new_admin            | makes a user an admin      | -u user
+	] rm_admin             | remove a user's admin privs| -u user
+	] rm_user              | delete a user account      | -u user
+	] set_pass             | set a user's password      | -u user -p pass
+	=---------------------------------------------------------------------------------------------
+
+	Other scripts
+
+	______________________________________________________________________________________________
+	| cargo run --bin {}   | description                | opts
+	=----------------------=----------------------------=-----------------------------------------
+	] get_user             | get a user's internal info | -u user
+	=--------------------------------------------------------------------------------------------- 
