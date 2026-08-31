@@ -88,7 +88,7 @@ pub async fn by_name<'a>(
                 r#"
                 <div class="thread-box">
                     <h3 id="{id}">
-                        <a href="/b/{bname}#{id}">#{id}</a>::<a href="/t/{id}">{name}</a>::<a href="/u/{uname}">{uname}</a>@<span class="unix-time">{time}</span>
+                        <a href="/b/{bname}#{id}">#{id}</a>::<a href="/t/{id}">{name}</a>::<a href="/u/{uname}">{uname}</a>@<span class="unix-time">{time}</span> {unread}
                     </h3>
                     <p>{cont}</p>
                     <div class="admin-panel-box">{admin_panel}</div>
@@ -99,6 +99,11 @@ pub async fn by_name<'a>(
                 uname = h!(format!("~{}", un!(db.get_user(t.author)).name)),
                 name = h!(t.name),
                 time = t.time,
+                unread = if db.is_read(me.id, t.id)? {
+                    ""
+                } else {
+                    "(unread)"
+                },
                 cont = {
                     let L = t.cont.len();
                     const M: usize = 32;

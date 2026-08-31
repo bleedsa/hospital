@@ -174,6 +174,30 @@ impl fmt::Display for Thread {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct Read {
+    pub id: i64,
+    pub marked: i64,
+    pub thread: i64,
+    pub time: i64,
+    pub is_post: bool,
+    pub user: i64,
+}
+
+impl Read {
+    #[inline(always)]
+    pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            id: r.get(0)?,
+            marked: r.get(1)?,
+            thread: r.get(2)?,
+            time: r.get(3)?,
+            is_post: r.get(4)?,
+            user: r.get(5)?,
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Post {
     pub id: i64,
     pub cont: String,
@@ -306,6 +330,16 @@ impl Db {
                 thread integer not null,
                 time integer not null,
                 author integer not null
+            );
+            "#,
+            r#"
+            create table if not exists read (
+                id integer primary key autoincrement,
+                marked integer not null,
+                thread integer not null,
+                time integer not null,
+                is_post boolean not null,
+                user integer not null
             );
             "#,
         ]
@@ -579,6 +613,89 @@ impl Db {
             r @ Ok(_) => r,
             Err(e) => err_fmt!("Db::new_board('{n}', '{d}'): {e}"),
         }
+    }
+
+    /** make a new read indicator entry */
+    pub fn mark_as_read(&self, u: i64, t: i64) -> R<()> {
+        let l = self.last_post(t)?;
+        if let Some(p) = l {
+            un!(self.sql.execute(
+                "
+                insert into read (marked, time, thread, is_post, user)
+                values (?1, ?2, ?3, true, ?4)
+                ",
+                (p.id, now()?, t, u),
+            ));
+        } else {
+            un!(self.sql.execute(
+                "
+                insert into read (marked, time, thread, is_post, user)
+                values (?1, ?2, ?3, false, ?4)
+                ",
+                (t, now()?, t, u)
+            ));
+        }
+
+        Ok(())
+    }
+
+    /** is this thread read? */
+    pub fn is_read(&self, u: i64, t: i64) -> R<bool> {
+        let last = self.last_post(t)?;
+
+        Ok(if let Some(last) = last {
+            if let Some(read) = self.last_read(t)? {
+                read.user == u && read.marked == last.id
+            } else {
+                false
+            }
+        } else {
+            if let Some(read) = self.last_read(t)? {
+                read.user == u && read.marked == t
+            } else {
+                false
+            }
+        })
+    }
+
+    /** get the last read marker */
+    pub fn last_read(&self, t: i64) -> R<Option<Read>> {
+        let r = un!(self.sql.prepare(
+            "
+            select * from read
+            where thread = ?1
+            order by time
+            "
+        ))
+            .query_map((t,), Read::new)
+            .map(|i| i.last());
+
+        Ok(if let Some(x) = un!(r) {
+            let u = un!(x);
+            Some(u)
+        } else {
+            None
+        })
+    }
+
+    /** get the last post made in a thread */
+    pub fn last_post(&self, t: i64) -> R<Option<Post>> {
+        let r = un!(self.sql.prepare(
+            "
+            select * from posts
+            where thread = ?1
+            order by time
+            "
+        ))
+            .query_map((t,), Post::new)
+            .map(|i| i.last());
+
+        Ok(if let Some(x) = un!(r) {
+            let u = un!(x);
+            Some(u)
+        } else {
+            None
+        })
     }
 
     /** hide a board from view */
@@ -1607,5 +1724,59 @@ pub mod test {
         let rs = db.get_post_replies(p.id).unwrap();
         assert_eq!(r1.id, rs[0]);
         assert_eq!(r2.id, rs[1]);
+    }
+
+    #[test]
+    fn get_last_post() {
+        let db = O("run/test/get_last_post.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+        let _ = db.new_post(t.id, u.id, "b", None).unwrap();
+        let _ = db.new_post(t.id, u.id, "c", None).unwrap();
+        let _ = db.new_post(t.id, u.id, "d", None).unwrap();
+        let l = db.last_post(t.id).unwrap();
+
+        assert_eq!(&l.unwrap().cont, "d");
+    }
+
+    #[test]
+    fn mark_as_read__empty_thread() {
+        let db = O("run/test/mark_as_read__empty_thread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+        
+        db.mark_as_read(u.id, t.id).unwrap();
+        assert!(db.is_read(u.id, t.id).unwrap());
+    }
+
+    #[test]
+    fn mark_as_read__nonempty_thread() {
+        let db = O("run/test/mark_as_read__nonempty_thread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+
+        db.new_post(t.id, u.id, "b", None).unwrap();
+        assert!(!db.is_read(u.id, t.id).unwrap());
+
+        db.mark_as_read(u.id, t.id).unwrap();
+        assert!(db.is_read(u.id, t.id).unwrap());
+    }
+
+    #[test]
+    fn new_post_is_unread() {
+        let db = O("run/test/new_post_is_unread.db");
+        let u = db.new_user("a", "a").unwrap();
+        let b = db.new_board("a", "a").unwrap();
+        let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
+
+        db.new_post(t.id, u.id, "b", None).unwrap();
+        db.mark_as_read(u.id, t.id).unwrap();
+        assert!(db.is_read(u.id, t.id).unwrap());
+
+        db.new_post(t.id, u.id, "c", None).unwrap();
+        assert!(!db.is_read(u.id, t.id).unwrap());
     }
 }

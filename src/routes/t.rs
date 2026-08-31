@@ -11,6 +11,8 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
     let b = un!(db.get_board(t.board), "{goto}");
     let name = &t.name;
 
+    un!(db.mark_as_read(me.id, t.id), "{goto}");
+
     Ok(page!(db, Some(me.id), {
          ("{name}"),
          r#"
