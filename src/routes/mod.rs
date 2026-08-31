@@ -1,4 +1,4 @@
-use crate::{pre::*, tags::tag, db::Db};
+use crate::{db::Db, pre::*, tags::tag};
 use axum::response::Html;
 use axum_cookie::CookieManager;
 
@@ -17,11 +17,7 @@ macro_rules! invalid_str {
 /** index/homepage (GET /) */
 pub async fn index(C: CookieManager) -> H<Html<String>> {
     let db = Db::new()?;
-    let me = if let Ok(x) = db.me(&C) {
-        Some(x)
-    } else {
-        None
-    };
+    let me = if let Ok(x) = db.me(&C) { Some(x) } else { None };
 
     Ok(page!(db, me.as_ref().map(|m| m.id), {
         ("index"),

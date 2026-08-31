@@ -13,14 +13,14 @@ pub mod js;
 pub mod page;
 pub mod passwd;
 pub mod rand;
+pub mod x;
 pub mod routes;
 pub mod tags;
-pub mod re;
 
 pub mod pre {
     pub use crate::{
         CFG, H, L, R, err_fmt, err_page, fatal, h, int2bool, now, page, puts,
-        re, timestamp_to_time, un, un_fatal,
+        re, timestamp_to_time, un, un_fatal, unh,
     };
 }
 
@@ -109,6 +109,11 @@ macro_rules! int2bool {
 #[macro_export]
 macro_rules! h {
     ($str:expr) => {{ html_escape::encode_safe(&$str).to_string() }};
+}
+
+#[macro_export]
+macro_rules! unh {
+    ($str:expr) => {{ html_escape::decode_html_entities(&$str).to_string() }};
 }
 
 #[macro_export]

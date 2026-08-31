@@ -81,7 +81,9 @@ pub async fn new_post(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     };
 
     /* final safety */
-    if let None = file && cont.is_empty() {
+    if let None = file
+        && cont.is_empty()
+    {
         return err_page!(("you cannot make empty posts!") => ("{goto}"));
     }
 

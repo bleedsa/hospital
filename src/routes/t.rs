@@ -1,7 +1,7 @@
 use axum::{extract::Path, response::Html};
 use axum_cookie::prelude::*;
 
-use crate::{db::Db, pre::*, re};
+use crate::{db::Db, pre::*, x};
 
 pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
     let db = Db::new()?;
@@ -95,7 +95,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                  tid = t.id,
                  uname = h!(format!("~{}", un!(db.get_user(p.author)).name)),
                  time = format!(r#"<span class="unix-time">{}</span>"#, p.time),
-                 cont = un!(re::posts(t.id, h!(p.cont))),
+                 cont = un!(x::posts(t.id, h!(p.cont))),
                  img = if let Some(id) = p.file {
                      let f = if let Ok(f) = db.get_file(id) {
                          f
