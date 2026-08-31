@@ -111,3 +111,14 @@ select::after {
 .bottom {
 	margin-top: 20px;
 }
+
+.hidden-items {
+	white-space: pre-wrap;
+}
+
+.unhide-form>form>input[type=submit] {
+	display: inline-block;
+	height: 15px;
+	width: 70px;
+	font-size: 8px;
+}

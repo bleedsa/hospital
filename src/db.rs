@@ -923,6 +923,39 @@ impl Db {
         map.map(|x| re!(x)).collect()
     }
 
+    pub fn get_all_hidden_threads(&self) -> R<Vec<Thread>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from threads
+            where hidden
+            "
+        ));
+
+        un!(r.query_map((), Thread::new)).map(|x| re!(x)).collect()
+    }
+
+    pub fn get_all_hidden_posts(&self) -> R<Vec<Post>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from posts
+            where hidden
+            "
+        ));
+
+        un!(r.query_map((), Post::new)).map(|x| re!(x)).collect()
+    }
+
+    pub fn get_all_hidden_boards(&self) -> R<Vec<Board>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from boards
+            where hidden
+            "
+        ));
+
+        un!(r.query_map((), Board::new)).map(|x| re!(x)).collect()
+    }
+
     pub fn hide_post(&self, id: i64) -> R<()> {
         L!(("hiding post {}", self.get_post(id)?.cont) => {
             un!(self.sql.execute(
