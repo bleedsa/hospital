@@ -83,7 +83,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
              .map(|p| Ok(format!(
                  r#"
                 <div class="post-box" id="{id}">
-                    <p class="bold"><a href="/t/{tid}#{id}">#{id}</a>::<a href="/u/{uname}">{uname}</a>@{time}</p>
+                    <p class="bold"><a href="/t/{tid}#{id}">#{id}</a>::<a href="/u/{uname}">{uname}</a>@{time}<span class="replies">{replies}</span></p>
                     {img}
                     <p class="post-content">{cont}</p>
                     <form action="/act/hide-post" method="post">
@@ -103,6 +103,15 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
                          return Ok(String::new())
                      };
                      format!(r#"<img src="/i/{}" class="post-img"><br>"#, f.id)
+                 } else {
+                     String::new()
+                 },
+                 replies = if let x = un!(db.get_post_replies(p.id))
+                     .into_iter()
+                     .map(|id| format!(r#"<a href="/t/{}#{id}">&gt;&gt;{id}</a>"#, t.id))
+                     .collect::<Vec<_>>()
+                     && x.len() > 0 {
+                         "|".to_owned() + &x.join(";")
                  } else {
                      String::new()
                  },
