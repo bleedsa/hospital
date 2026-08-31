@@ -2,7 +2,7 @@
 	--bg: #ffeaff;
 	--fg: #2c3e50;
 	--borders: #3498db;
-	--a-clicked: #ecf0f1;
-	--a-unclicked: #3498db;
+	--a-unclicked: var(--fg);
+	--a-clicked: var(--fg);
 	--border-width: 2px;
 }
