@@ -2,7 +2,7 @@
 	--fg: #aa0000;
 	--bg: white;
 	--borders: var(--fg);
-	--a-clicked: var(--fg);
-	--a-unclicked: #990000;
+	--a-clicked: red;
+	--a-unclicked: red;
 	--border-width: 2px;
 }
