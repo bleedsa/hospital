@@ -1,3 +1,17 @@
+use crate::{pre::*, db::Db};
+
+#[inline(always)]
+pub fn hidden_boards(db: Db) -> R<String> {
+    Ok(format!(
+        r#"<span class="hidden-boards">{}</span>"#,
+        db.get_all_hidden_boards()?
+            .into_iter()
+            .map(|b| format!(r#"<a href="/b/{n}">/{n}/</a>"#, n = b.name))
+            .collect::<Vec<_>>()
+            .join("\\")
+    ))
+}
+
 /** make an html page */
 #[macro_export]
 macro_rules! page {
@@ -28,7 +42,7 @@ macro_rules! page {
                         ::
                         {login_user}{admin_panel}
                         ::
-                        {boards}
+                        {boards}{hidden_boards}
                     </div>
                     <hr>
 
@@ -68,6 +82,15 @@ macro_rules! page {
                 if $db.get_user(id)?.admin {
                     "|".to_owned() +
                         r#"<span class="admin-panel-a"><a href="/admin">admin panel</a></span>"#
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            },
+            hidden_boards = if let Some(id) = $me {
+                if $db.get_user(id)?.admin {
+                    ":: (hidden) ".to_owned() + &$crate::page::hidden_boards($db)?
                 } else {
                     String::new()
                 }
