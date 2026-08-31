@@ -15,11 +15,12 @@ pub mod passwd;
 pub mod rand;
 pub mod routes;
 pub mod tags;
+pub mod re;
 
 pub mod pre {
     pub use crate::{
         CFG, H, L, R, err_fmt, err_page, fatal, h, int2bool, now, page, puts,
-        re, timestamp_to_time, un,
+        re, timestamp_to_time, un, un_fatal,
     };
 }
 
