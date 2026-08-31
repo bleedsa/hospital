@@ -1,4 +1,4 @@
-use crate::{pre::*, db::Db};
+use crate::{db::Db, pre::*};
 
 #[inline(always)]
 pub fn hidden_boards(db: Db) -> R<String> {

@@ -539,6 +539,18 @@ impl Db {
         map.map(|x| re!(x)).collect()
     }
 
+    /** get all admin users */
+    pub fn get_all_admins(&self) -> R<Vec<User>> {
+        let mut r = un!(self.sql.prepare(
+            "
+            select * from users
+            where admin
+            "
+        ));
+
+        un!(r.query_map((), row2user)).map(|x| re!(x)).collect()
+    }
+
     /** create a new board */
     pub fn new_board<N, D>(&self, n: N, d: D) -> R<Board>
     where

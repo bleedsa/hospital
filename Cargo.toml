@@ -54,6 +54,11 @@ name = "mk_visible"
 test = false
 path = "bin/mk_visible.rs"
 
+[[bin]]
+name = "dump_admins"
+test = false
+path = "bin/dump_admins.rs"
+
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = { version = "0.8.9", features = ["macros", "multipart"] }

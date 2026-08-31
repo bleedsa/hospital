@@ -1,4 +1,7 @@
-use axum::{Form, response::{Redirect, Html}};
+use axum::{
+    Form,
+    response::{Html, Redirect},
+};
 use axum_cookie::prelude::*;
 use serde::Deserialize;
 
@@ -29,7 +32,7 @@ macro_rules! H {
                 )
             })
             .collect::<String>()
-    }}
+    }};
 }
 
 pub async fn admin(C: CookieManager) -> H<Html<String>> {
@@ -71,8 +74,7 @@ pub struct UnhideForm {
 pub async fn unhide(
     C: CookieManager,
     Form(f): Form<UnhideForm>,
-) -> H<Redirect>
-{
+) -> H<Redirect> {
     let db = Db::new()?;
     let me = db.me(&C)?;
 
@@ -81,9 +83,15 @@ pub async fn unhide(
     }
 
     match f.ty {
-        'b' => {db.visible_board(f.id)?;},
-        't' => {db.visible_thread(f.id)?;},
-        'p' => {db.visible_post(f.id)?;},
+        'b' => {
+            db.visible_board(f.id)?;
+        }
+        't' => {
+            db.visible_thread(f.id)?;
+        }
+        'p' => {
+            db.visible_post(f.id)?;
+        }
         t => return err_page!(("invalid form type: {t}") => ("/admin")),
     };
 

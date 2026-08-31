@@ -36,4 +36,5 @@ ADMINISTRATOR SCRIPTS
 	=----------------------=----------------------------=------------------
 	] get_user             | get a user's internal info | -u user
 	] dump_boards          | dump all board information | [-t] [-p] 
+	] dump_admins          | display the names of admins|
 	=----------------------------------------------------------------------
