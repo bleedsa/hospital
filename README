@@ -33,4 +33,5 @@ ADMINISTRATOR SCRIPTS
 	| cargo run --bin {}   | description                | opts
 	=----------------------=----------------------------=-----------------------------------------
 	] get_user             | get a user's internal info | -u user
+	] dump_boards          | dump all board information | [-t include threads] [-p include posts]
 	=--------------------------------------------------------------------------------------------- 
