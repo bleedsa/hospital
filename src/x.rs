@@ -11,7 +11,7 @@ static REPLYRE: LazyLock<Regex> =
 /** links ie http://badboy.institute/~skye */
 static LINKRE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(&format!(
-        r#"(http|https):{s}{s}[a-zA-Z0-9]+\.[a-zA-Z0-9]+[a-zA-Z0-9%?~@#&"{s}"]*"#,
+        r#"(http|https):{s}{s}[a-zA-Z0-9]+\.[a-zA-Z0-9]+[a-zA-Z0-9%?@#&"{s}"]*"#,
         s = "&#x2F;",
     )).unwrap()
 });
