@@ -26,6 +26,7 @@ ADMINISTRATOR SCRIPTS
 	] rm_admin             | remove a user's admin privs| -u user
 	] rm_user              | delete a user account      | -u user
 	] set_pass             | set a user's password      | -u user -p pass
+	] mk_visible           | make a thread/post visible | -i id [-p post?]
 	=----------------------------------------------------------------------
 
 	Other scripts, for grabbing database information etc.
