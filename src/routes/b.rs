@@ -12,7 +12,7 @@ pub async fn by_name<'a>(
     let me = un!(db.me(&c), "/b/{}", b.id);
 
     Ok(page!(db, Some(me.id), {
-        ("{n} :: view board"),
+        ("/{n}/ :: view board"),
         r#"
         <h1>/{n}/</h1>
         <p><span class="italic">{desc}</span></p>
