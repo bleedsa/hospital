@@ -1,6 +1,6 @@
 use axum::{Router, routing::post};
 use axum_cookie::prelude::*;
-use axum_test::{TestRequest, TestServer};
+use axum_test::TestServer;
 
 use crate::{
     db::Db,
@@ -31,7 +31,7 @@ where
 
 #[tokio::test]
 async fn login_user_not_found() {
-    let (db, db_path) = O("login_user_not_found");
+    let (_, db_path) = O("login_user_not_found");
 
     let app = U(|r| r);
     let srv = TestServer::new(app);
@@ -46,7 +46,7 @@ async fn login_user_not_found() {
 
 #[tokio::test]
 async fn login_empty_inputs() {
-    let (db, db_path) = O("login_empty_inputs");
+    let (_, db_path) = O("login_empty_inputs");
     for f in [
         LoginForm {
             user: String::new(),
@@ -61,7 +61,6 @@ async fn login_empty_inputs() {
     ]
         .into_iter()
     {
-        let db = O("login_empty_inputs");
         let app = U(|r| r);
         let srv = TestServer::new(app);
         let res = srv.post("/act/login").form(&f).await;
