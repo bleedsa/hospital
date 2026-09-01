@@ -301,6 +301,17 @@ impl Db {
         db_path(|p| Self::create(p))
     }
 
+    pub fn new_opt<P>(o: Option<P>) -> R<Self>
+    where
+        P: AsRef<str> + ToString
+    {
+        if let Some(p) = o {
+            Self::create(p)
+        } else {
+            Self::new()
+        }
+    }
+
     /** initialize a database with the tables we need */
     pub fn init(self) -> R<Self> {
         /* default table querys */

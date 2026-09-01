@@ -9,7 +9,7 @@ use crate::{
 };
 use std::fs;
 
-fn O(p: &str) -> Db {
+fn O(p: &str) -> (Db, Option<String>) {
     let p = "run/test/act/".to_owned() + p + ".db";
 
     if fs::exists(&p).unwrap() {
@@ -18,7 +18,7 @@ fn O(p: &str) -> Db {
 
     set_db_path(p.clone()).unwrap();
 
-    Db::create(p).unwrap().init().unwrap()
+    (Db::create(p.clone()).unwrap().init().unwrap(), Some(p))
 }
 
 fn U<F>(f: F) -> Router
@@ -29,30 +29,16 @@ where
         .layer(CookieLayer::default())
 }
 
-fn login_test<D, E>(db_p: &str, d: D, e: E) -> TestRequest
-where
-    D: Fn(&Db),
-    E: Fn(TestServer) -> TestRequest,
-{
-    let db = O(db_p);
-
-    d(&db);
-
-    let app = U(|r| r);
-    let srv = TestServer::new(app);
-
-    e(srv)
-}
-
 #[tokio::test]
 async fn login_user_not_found() {
-    let db = O("login_user_not_found");
+    let (db, db_path) = O("login_user_not_found");
 
     let app = U(|r| r);
     let srv = TestServer::new(app);
     let res = srv.post("/act/login").form(&LoginForm {
         user: "A".to_string(),
         pass: "A".to_string(),
+        db_path,
     }).await;
 
     assert!(res.text().contains("user not found"));
@@ -60,14 +46,17 @@ async fn login_user_not_found() {
 
 #[tokio::test]
 async fn login_empty_inputs() {
+    let (db, db_path) = O("login_empty_inputs");
     for f in [
         LoginForm {
             user: String::new(),
             pass: "A".to_string(),
+            db_path: db_path.clone(), 
         },
         LoginForm {
             user: "A".to_string(),
             pass: String::new(),
+            db_path: db_path.clone(),
         },
     ]
         .into_iter()
@@ -80,4 +69,23 @@ async fn login_empty_inputs() {
         println!("{}", res.text());
         assert!(res.text().contains("invalid form parameters"));
     }
+}
+
+#[tokio::test]
+async fn login() {
+    let (db, db_path) = O("login");
+
+    let u = db.new_user("a", "a").unwrap();
+    println!("{u}");
+
+    let app = U(|r| r);
+    let srv = TestServer::new(app);
+    let res = srv.post("/act/login").form(&LoginForm {
+        user: "a".to_string(),
+        pass: "a".to_string(),
+        db_path,
+    }).await;
+
+    println!("{}", res.text());
+    assert!(!res.text().contains("user not found"));
 }

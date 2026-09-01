@@ -9,6 +9,7 @@ use crate::{db::Db, invalid_str, multipart_to_map, passwd, pre::*};
 pub struct LoginForm {
     pub user: String,
     pub pass: String,
+    pub db_path: Option<String>,
 }
 
 /** login action */
@@ -19,7 +20,7 @@ pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
     }
 
     /* make a db and get the user from the form */
-    let db = Db::new()?;
+    let db = Db::new_opt(f.db_path)?;
     let u = db.get_user_by_name(&f.user)?;
 
     /* check the password */
