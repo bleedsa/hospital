@@ -306,7 +306,7 @@ impl Db {
         P: AsRef<str> + ToString
     {
         if let Some(p) = o {
-            Self::create(p)
+            Self::create(p)?.init()
         } else {
             Self::new()
         }
