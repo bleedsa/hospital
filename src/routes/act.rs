@@ -306,3 +306,27 @@ pub async fn set_theme(
 
     Ok(Redirect::to(&goto))
 }
+
+#[derive(Deserialize)]
+pub struct UpdateCssForm {
+    pub user: i64,
+    pub vars: String,
+    pub body: String,
+}
+
+pub async fn update_css(
+    C: CookieManager,
+    Form(f): Form<UpdateCssForm>,
+) -> H<Redirect> {
+    let db = Db::new()?;
+    let me = db.me(&C)?;
+    let goto = format!("/u/~{}", me.name);
+
+    if f.vars.len() > 1028 || f.body.len() > 1028 {
+        return err_page!(("css must not be greater than 1028 chars!") => ("{goto}"));
+    }
+
+    un!(db.new_css(me.id, &f.vars, &f.body), "{goto}");
+
+    Ok(Redirect::to(&goto))
+}

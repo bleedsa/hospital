@@ -56,11 +56,30 @@ pub fn get_theme_names() -> impl Iterator<Item = &'static str> {
 }
 
 /** get the css stylesheet as a string to inject into <style> in page!{} */
-pub fn css(me: Option<i64>) -> R<String> {
-    let t = if let Some(id) = me {
-        get_theme(Db::new()?.get_theme(id)?).unwrap_or("")
+pub fn css(db: &Db, me: Option<i64>) -> R<String> {
+    let (t, vars, body) = if let Some(id) = me {
+        let t = get_theme(db.get_theme(id)?)?;
+        let css = db.get_css(id)?;
+        if let Some(css) = css {
+            (t, css.vars, css.css)
+        } else {
+            (t, String::new(), String::new())
+        }
     } else {
-        ""
+        ("", String::new(), String::new())
     };
-    Ok(format!("{}\n{}", t, DEFAULT_CSS))
+
+    Ok(format!(
+        r#"
+        :root {{
+            {theme}
+            {vars}
+        }}
+
+        {base}
+        {body}
+        "#,
+        theme = t,
+        base = DEFAULT_CSS
+    ))
 }

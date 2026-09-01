@@ -1,8 +1,6 @@
-:root {
-	--bg: blue;
-	--fg: white;
-	--borders: white;
-	--border-width: 2px;
-	--a-unclicked: white;
-	--a-clicked: white;
-}
+--bg: blue;
+--fg: white;
+--borders: white;
+--border-width: 2px;
+--a-unclicked: white;
+--a-clicked: white;

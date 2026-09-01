@@ -205,6 +205,7 @@ pub struct Css {
     pub id: i64,
     pub user: i64,
     pub css: String,
+    pub vars: String,
 }
 
 impl Css {
@@ -213,6 +214,7 @@ impl Css {
             id: r.get(0)?,
             user: r.get(1)?,
             css: r.get(2)?,
+            vars: r.get(3)?,
         })
     }
 }
@@ -366,7 +368,8 @@ impl Db {
             create table if not exists css (
                 id integer primary key autoincrement,
                 user integer not null,
-                css text not null
+                css text not null,
+                vars text not null
             );
             "#,
         ]
@@ -832,19 +835,21 @@ impl Db {
         }
     }
 
-    pub fn new_css<C>(&self, uid: i64, css: C) -> R<Option<Css>>
+    pub fn new_css<V, C>(&self, uid: i64, vars: V, css: C) -> R<Option<Css>>
     where
+        V: AsRef<str>,
         C: AsRef<str>
     {
+        let vars = vars.as_ref();
         let css = css.as_ref();
 
         L!(("creating new css for user {}: {css}", self.get_user(uid)?.name) => {
             un!(self.sql.execute(
                 "
-                insert into css (user, css)
-                values (?1, ?2)
+                insert into css (user, css, vars)
+                values (?1, ?2, ?3)
                 ",
-                (uid, css),
+                (uid, css, vars),
             ))
         });
 
@@ -859,7 +864,7 @@ impl Db {
             "
         ))
             .query_map((uid,), Css::new)
-            .map(|mut i| i.next());
+            .map(|i| i.last());
 
         if let Some(c) = un!(r) {
             Ok(Some(un!(c)))

@@ -553,9 +553,11 @@ fn new_post_is_unread() {
 fn add_user_css() {
     let db = O("run/test/add_user_css.db");
     let u = db.new_user("a", "a").unwrap();
-    let txt = "body{color:red;}";
-    let css = db.new_css(u.id, txt).unwrap().unwrap();
-    assert_eq!(&css.css, txt);
+    let var = "--fg:red;";
+    let bod = "body{color:var(--fg);}";
+    let css = db.new_css(u.id, var, bod).unwrap().unwrap();
+    assert_eq!(&css.vars, var);
+    assert_eq!(&css.css, bod);
 }
 
 #[test]
@@ -564,4 +566,14 @@ fn get_css__no_css() {
     let u = db.new_user("a", "a").unwrap();
     let css = db.get_css(u.id).unwrap();
     assert_eq!(css, None);
+}
+
+#[test]
+fn get_css__several_css() {
+    let db = O("run/test/get_css__several_css.db");
+    let u = db.new_user("a", "a").unwrap();
+    let _ = db.new_css(u.id, "", "test").unwrap().unwrap();
+
+    let css = db.new_css(u.id, "", "test2").unwrap().unwrap();
+    assert_eq!(&css.css, "test2");
 }

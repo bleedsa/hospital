@@ -31,6 +31,7 @@ async fn main() -> R<()> {
         .route("/act/hide-post", post(routes::act::hide_post))
         .route("/act/hide-board", post(routes::act::hide_board))
         .route("/act/set-theme", post(routes::act::set_theme))
+        .route("/act/update-css", post(routes::act::update_css))
         .route("/dbg/user/{id}", get(routes::dbg::user))
         .route("/b/{name}", get(routes::b::by_name))
         .route("/t/{id}", get(routes::t::by_id))

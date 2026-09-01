@@ -64,6 +64,8 @@ DIRECTORY
 	]     t.rs           | /t/ -- view threads
 	]     u.rs           | /u/ -- view users
 	]     i.rs           | /i/ -- view images
+	]   db/              | extras for the database
+	]     test.rs        | database tests
 	] bin/               | binaries & scripts
 	] etc/               | configs & patches
 	] css/               | css files

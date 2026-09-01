@@ -59,7 +59,7 @@ macro_rules! page {
             site_title = (&*CFG).title(),
             title = format!($($t)*),
             body = format!($($b)*),
-            css = css::css($me)?,
+            css = css::css(&$db, $me)?,
             js = js::base(),
             login_user = if let Some(id) = $me {
                 format!(r#"<a href="/u/~{n}">~{n}</a>"#, n = un!($db.get_user(id)).name)

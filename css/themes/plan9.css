@@ -1,8 +1,6 @@
-:root {
-	--bg: #ffeaff;
-	--fg: #2c3e50;
-	--borders: #3498db;
-	--a-unclicked: var(--fg);
-	--a-clicked: var(--fg);
-	--border-width: 2px;
-}
+--bg: #ffeaff;
+--fg: #2c3e50;
+--borders: #3498db;
+--a-unclicked: var(--fg);
+--a-clicked: var(--fg);
+--border-width: 2px;

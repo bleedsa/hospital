@@ -1,8 +1,6 @@
-:root {
-	--fg: #aa0000;
-	--bg: white;
-	--borders: var(--fg);
-	--a-clicked: var(--fg);
-	--a-unclicked: red;
-	--border-width: 2px;
-}
+--fg: #aa0000;
+--bg: white;
+--borders: var(--fg);
+--a-clicked: var(--fg);
+--a-unclicked: red;
+--border-width: 2px;

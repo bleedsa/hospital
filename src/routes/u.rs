@@ -16,8 +16,15 @@ pub async fn by_name(
         r#"
         <h1>~{name} {admin}</h1>
         <p>{bio}</p>
+
+        <h3>update user info</h3>
         <form method="post" action="/act/update-user">
             {update}
+        </form>
+
+        <h3>update user css</h3>
+        <form method="post" action="/act/update-css">
+            {css}
         </form>
         "#,
         admin = if u.admin {
@@ -58,6 +65,35 @@ pub async fn by_name(
                         "#
                     ))
                     .collect::<String>(),
+            )
+        } else {
+            String::new()
+        },
+        css = if me.id == u.id {
+            let css = db.get_css(me.id)?.map(|c| (c.vars, c.css));
+
+            format!(
+                r#"
+                <table>
+                    <tr>
+                        <td>css vars</td>
+                        <td>
+                            <textarea name="vars" rows="3" cols="30">{vars}</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>css body</td>
+                        <td>
+                            <textarea name="body" rows="3" cols="30">{body}</textarea>
+                        </td>
+                    </tr>
+                </table>
+                <input type="hidden" name="user" value="{id}">
+                <input type="submit" value="go">
+                "#,
+                id = me.id,
+                vars = css.as_ref().map(|(x, _)| x).unwrap_or(&String::new()),
+                body = css.as_ref().map(|(_, x)| x).unwrap_or(&String::new()),
             )
         } else {
             String::new()
