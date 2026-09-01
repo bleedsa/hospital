@@ -5,7 +5,10 @@ use axum::{
 use axum_cookie::prelude::*;
 use serde::Deserialize;
 
-use crate::{db::{Post, Thread, Db}, pre::*};
+use crate::{
+    db::{Db, Post, Thread},
+    pre::*,
+};
 
 macro_rules! H {
     ($v:expr, $T:expr, $f:expr) => {{

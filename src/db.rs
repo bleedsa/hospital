@@ -667,8 +667,8 @@ impl Db {
             order by time
             "
         ))
-            .query_map((t,), Read::new)
-            .map(|i| i.last());
+        .query_map((t,), Read::new)
+        .map(|i| i.last());
 
         Ok(if let Some(x) = un!(r) {
             let u = un!(x);
@@ -687,8 +687,8 @@ impl Db {
             order by time
             "
         ))
-            .query_map((t,), Post::new)
-            .map(|i| i.last());
+        .query_map((t,), Post::new)
+        .map(|i| i.last());
 
         Ok(if let Some(x) = un!(r) {
             let u = un!(x);
@@ -1752,7 +1752,7 @@ pub mod test {
         let u = db.new_user("a", "a").unwrap();
         let b = db.new_board("a", "a").unwrap();
         let t = db.new_thread(b.id, u.id, "a", "a", None).unwrap();
-        
+
         db.mark_as_read(u.id, t.id).unwrap();
         assert!(db.is_read(u.id, t.id).unwrap());
     }

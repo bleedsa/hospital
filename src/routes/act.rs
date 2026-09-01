@@ -183,7 +183,7 @@ pub async fn update_user(
 #[derive(Deserialize)]
 pub struct HideThreadForm {
     pub id: i64,
-    pub goto: Option<String>
+    pub goto: Option<String>,
 }
 
 pub async fn hide_thread(

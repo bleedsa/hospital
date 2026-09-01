@@ -123,36 +123,28 @@ macro_rules! L {
         use std::{io::Write, fs::{self, OpenOptions}};
         use $crate::pre::*;
 
-        let T = timestamp_to_time(now()?);
-        let F = format!($($m)*);
-        macro_rules! Q {()=>{"[log][{}]: {}..."};}
-        let l = format!(Q!(), T, F);
-        let m = format!(Q!(), T.to_string().blue(), F);
+        macro_rules! Q {()=>{"[{}]: {}..."};}           /* format template */
+        let T = timestamp_to_time(now()?);              /* timestamp */
+        let F = format!($($m)*);                        /* formatted message */
+        let l = format!(Q!(), T, F);                    /* logfile msg */
+        let m = format!(Q!(), T.to_string().blue(), F); /* stdout msg */
 
        let p = &(&*CFG).server.log_file;
-       let mut f = if un!(fs::exists(p)) {
-            un!(OpenOptions::new()
+       let mut f = un!(if un!(fs::exists(p)) {
+            OpenOptions::new()
                 .write(true)
                 .append(true)
-                .open(p))
+                .open(p)
        } else {
-           un!(OpenOptions::new()
+           OpenOptions::new()
                .write(true)
                .create(true)
-               .open(p))
-       };
+               .open(p)
+       });
 
-        puts!("{m}");
-        if let Err(e) = write!(f, "{l}") {
-            eprintln!("couldn't write to log file {p}: {e}");
-        }
-
-        let r = $x;
-
-        println!("{}", "ok".bold().green());
-        if let Err(e) = writeln!(f, "ok") {
-            eprintln!("couldn't write ok to log file {p}: {e}");
-        }
+        puts!("{m}");                        let _ = write!(f, "{l}");  /*log*/
+        let r = $x;                                                     /*exe*/
+        println!("{}", "ok".bold().green()); let _ = writeln!(f, "ok"); /*ok*/
 
         r
     }};
