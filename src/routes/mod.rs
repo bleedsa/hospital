@@ -10,6 +10,9 @@ pub mod i;
 pub mod t;
 pub mod u;
 
+#[cfg(test)]
+mod test;
+
 #[macro_export]
 macro_rules! invalid_str {
     ($s:expr, $L:expr) => {{ $s.is_empty() || $s.len() > $L }};

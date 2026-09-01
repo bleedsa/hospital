@@ -1,14 +1,14 @@
 use axum::{Form, extract::Multipart, response::Redirect};
 use axum_cookie::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 
 use crate::{db::Db, invalid_str, multipart_to_map, passwd, pre::*};
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct LoginForm {
-    user: String,
-    pass: String,
+    pub user: String,
+    pub pass: String,
 }
 
 /** login action */
@@ -146,7 +146,7 @@ pub async fn new_thread(C: CookieManager, mut m: Multipart) -> H<Redirect> {
     Ok(Redirect::to(&format!("/t/{}", t.id)))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct UpdateUserForm {
     pub bio: String,
     pub pass: String,
@@ -180,7 +180,7 @@ pub async fn update_user(
     Ok(Redirect::to(&goto))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct HideThreadForm {
     pub id: i64,
     pub goto: Option<String>,
@@ -210,7 +210,7 @@ pub async fn hide_thread(
     }))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct HidePostForm {
     pub id: i64,
 }
@@ -235,7 +235,7 @@ pub async fn hide_post(
     Ok(Redirect::to(&goto))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct HideBoardForm {
     pub id: i64,
 }
@@ -259,7 +259,7 @@ pub async fn hide_board(
     Ok(Redirect::to(&goto))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct LockThreadForm {
     pub id: i64,
     pub locked: bool,
@@ -289,7 +289,7 @@ pub async fn lock_thread(
     Ok(Redirect::to(&goto))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct SetThemeForm {
     pub theme: String,
 }
@@ -307,7 +307,7 @@ pub async fn set_theme(
     Ok(Redirect::to(&goto))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct UpdateCssForm {
     pub user: i64,
     pub vars: String,

@@ -5,7 +5,11 @@ use chrono::{DateTime, TimeZone, Utc};
 use serde::Deserialize;
 
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::{collections::HashMap, fs, sync::LazyLock};
+use std::{
+    collections::HashMap,
+    fs,
+    sync::{LazyLock, RwLock},
+};
 
 pub mod css;
 pub mod db;
@@ -19,8 +23,8 @@ pub mod x;
 
 pub mod pre {
     pub use crate::{
-        CFG, H, L, R, err_fmt, err_page, fatal, h, int2bool, now, page, puts,
-        re, timestamp_to_time, un, un_fatal, unh,
+        CFG, H, L, R, db_path, err_fmt, err_page, fatal, h, int2bool, now,
+        page, puts, re, set_db_path, timestamp_to_time, un, un_fatal, unh,
     };
 }
 
@@ -220,10 +224,44 @@ impl Cfg {
     }
 }
 
-pub static CFG: LazyLock<Cfg> = LazyLock::new(|| match Cfg::new() {
-    Ok(x) => x,
-    Err(e) => fatal!("{e}"),
+pub static CFG: LazyLock<Cfg> = LazyLock::new(|| {
+    let c = match Cfg::new() {
+        Ok(x) => x,
+        Err(e) => fatal!("{e}"),
+    };
+
+    {
+        let mut k = un_fatal!(DB_PATH.write());
+        *k = c.server.db.clone();
+    }
+
+    c
 });
+
+pub static DB_PATH: RwLock<String> = RwLock::new(String::new());
+
+#[inline(always)]
+pub fn set_db_path(p: String) -> R<()> {
+    /*
+     * NOTE: this log is LOAD BEARING.
+     * removing it causes CFG to init too late.
+     */
+    L!(("setting db path ({}=>{})", (&*CFG).server.db, p) => {
+        let mut k = un!(DB_PATH.write());
+        *k = p;
+    });
+
+    Ok(())
+}
+
+#[inline(always)]
+pub fn db_path<T, F>(f: F) -> R<T>
+where
+    F: Fn(&str) -> R<T>,
+{
+    let k = un!(DB_PATH.read());
+    f(&*k)
+}
 
 pub async fn multipart_to_map(m: &mut Multipart) -> R<HashMap<String, Bytes>> {
     /* map of multipart fields */

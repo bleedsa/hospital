@@ -75,3 +75,6 @@ rusqlite = "0.40.2"
 serde = { version = "1.0.229", features = ["derive"] }
 tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 toml = "1.1.4"
+
+[dev-dependencies]
+axum-test = "21.1.0"

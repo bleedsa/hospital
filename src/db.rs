@@ -270,11 +270,15 @@ impl fmt::Display for Post {
 
 pub struct Db {
     pub sql: Connection,
+    pub path: String,
 }
 
 impl Db {
-    pub fn create(p: &str) -> R<Self> {
-        let p = Path::new(p);
+    pub fn create<P>(_p: P) -> R<Self>
+    where
+        P: AsRef<str> + ToString,
+    {
+        let p = Path::new(_p.as_ref());
 
         /* if the run dir does not exist, we create it for you,
          * little special snowflake. */
@@ -286,12 +290,15 @@ impl Db {
 
         /* open */
         let sql = un!(Connection::open(p));
-        Ok(Self { sql })
+        Ok(Self {
+            sql,
+            path: _p.to_string(),
+        })
     }
 
     #[inline(always)]
     pub fn new() -> R<Self> {
-        Self::create(&CFG.server.db)
+        db_path(|p| Self::create(p))
     }
 
     /** initialize a database with the tables we need */
@@ -615,6 +622,11 @@ impl Db {
         un!(r.query_map((), row2user)).map(|x| re!(x)).collect()
     }
 
+    pub fn get_all_users(&self) -> R<Vec<User>> {
+        let mut r = un!(self.sql.prepare("select * from users"));
+        un!(r.query_map((), row2user)).map(|x| re!(x)).collect()
+    }
+
     /** create a new board */
     pub fn new_board<N, D>(&self, n: N, d: D) -> R<Board>
     where
@@ -838,7 +850,7 @@ impl Db {
     pub fn new_css<V, C>(&self, uid: i64, vars: V, css: C) -> R<Option<Css>>
     where
         V: AsRef<str>,
-        C: AsRef<str>
+        C: AsRef<str>,
     {
         let vars = vars.as_ref();
         let css = css.as_ref();
@@ -863,8 +875,8 @@ impl Db {
             where user = ?1
             "
         ))
-            .query_map((uid,), Css::new)
-            .map(|i| i.last());
+        .query_map((uid,), Css::new)
+        .map(|i| i.last());
 
         if let Some(c) = un!(r) {
             Ok(Some(un!(c)))

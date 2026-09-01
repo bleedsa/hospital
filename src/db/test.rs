@@ -1,4 +1,3 @@
-
 use crate::{
     db::{Db, SESSION_HASH_LEN},
     passwd,
