@@ -1,6 +1,8 @@
 BADBOY HOSPITAL
 
-	A forum for friends :)
+	A little forum for my friends :)
+
+		=> http://hospital.badboy.institute
 
 RUN YOUR OWN
 
@@ -17,8 +19,8 @@ ADMINISTRATOR SCRIPTS
 	cess, so to add users, make admins, add boards, etc, you must run these
 	scripts.
 
-	_______________________________________________________________________
-	| cargo run --bin {}   | description                | opts
+	.______________________________________________________________________
+	| cargo run --bin {}   | description                | options
 	=----------------------=----------------------------=------------------
 	] new_board            | creates a new board        | -b name -d desc
 	] new_user             | creates a new user         | -u user -p pass
@@ -27,14 +29,48 @@ ADMINISTRATOR SCRIPTS
 	] rm_user              | delete a user account      | -u user
 	] set_pass             | set a user's password      | -u user -p pass
 	] mk_visible           | make a thread/post visible | -i id [-p post?]
-	=----------------------------------------------------------------------
+	^----------------------------------------------------------------------
 
 	Other scripts, for grabbing database information etc.
 
-	_______________________________________________________________________
-	| cargo run --bin {}   | description                | opts
+	.______________________________________________________________________
+	| cargo run --bin {}   | description                | options
 	=----------------------=----------------------------=------------------
 	] get_user             | get a user's internal info | -u user
 	] dump_boards          | dump all board information | [-t] [-p] 
 	] dump_admins          | display the names of admins|
-	=----------------------------------------------------------------------
+	^----------------------------------------------------------------------
+
+BACKEND STACK
+
+	===============================
+	| lang  | rust
+	| http  | axum
+	| db    | sqlite(rusqlite)
+	| async | tokio
+	===============================
+
+DIRECTORY
+
+	._____________________________________________________________________________________________
+	| dir/file           | description
+	=--------------------=------------------------------------------------------------------------
+	] src/               | rust library files & main.rs
+	]   routes/          | http routes passed to axum Router
+	]     act.rs         | database "actions"
+	]     admin.rs       | admin actions
+	]     dbg.rs         | /dbg/ -- debug paths
+	]     b.rs           | /b/ -- view boards
+	]     t.rs           | /t/ -- view threads
+	]     u.rs           | /u/ -- view users
+	]     i.rs           | /i/ -- view images
+	] bin/               | binaries & scripts
+	] etc/               | configs & patches
+	] css/               | css files
+	]   themes/          | user theme variable files
+	] run/               | runtime files (sqlite database files etc)
+	^---------------------------------------------------------------------------------------------
+
+LICENSE
+
+	Mozilla Public License/2.0
