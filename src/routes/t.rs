@@ -18,6 +18,7 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
          r#"
         <h1><a href="/b/{bname}">/{bname}/</a></h1>
         <h2>{name}</h2>
+        {hide_unhide}
         {back}
         <div class="post-box">
             <p class="bold">#{id}::<a href="/u/{uname}">{uname}</a>@{time}</p>
@@ -45,6 +46,34 @@ pub async fn by_id(C: CookieManager, Path(id): Path<i64>) -> H<Html<String>> {
          },
          cont = x::threads(h!(t.cont)),
          back = format!(r#"<p><a href="/b/{}#{}">go back</a></p>"#, b.name, t.id),
+         hide_unhide = if me.admin {
+             if t.hidden {
+                 format!(
+                    r#"
+                    <form action="/admin/unhide" method="post">
+                        <input type="submit" value="unhide thread">
+                        <input type="hidden" name="id" value="{id}">
+                        <input type="hidden" name="ty" value="t">
+                        <input type="hidden" name="goto" value="/t/{id}">
+                    </form>
+                    "#,
+                    id = t.id
+                )
+             } else {
+                 format!(
+                     r#"
+                     <form action="/act/hide-thread" method="post">
+                        <input type="submit" value="hide thread">
+                        <input type="hidden" name="id" value="{id}">
+                        <input type="hidden" name="goto" value="/t/{id}">
+                    </form>
+                    "#,
+                    id = t.id
+                 )
+             }
+         } else {
+             String::new()
+         },
          new_post = if t.locked() {
              r#"<h3>this thread is locked. you cannot post in it."#.into()
          } else {

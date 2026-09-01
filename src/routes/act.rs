@@ -183,6 +183,7 @@ pub async fn update_user(
 #[derive(Deserialize)]
 pub struct HideThreadForm {
     pub id: i64,
+    pub goto: Option<String>
 }
 
 pub async fn hide_thread(
@@ -202,7 +203,11 @@ pub async fn hide_thread(
 
     un!(db.hide_thread(t.id), "{goto}");
 
-    Ok(Redirect::to(&goto))
+    Ok(Redirect::to(if let Some(g) = f.goto.as_ref() {
+        g
+    } else {
+        &goto
+    }))
 }
 
 #[derive(Deserialize)]

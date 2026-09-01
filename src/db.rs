@@ -719,48 +719,54 @@ impl Db {
 
     /** make a board visible */
     pub fn visible_board(&self, id: i64) -> R<Board> {
-        let _ = self.get_board(id)?;
+        let b = self.get_board(id)?;
 
-        un!(self.sql.execute(
-            "
-            update boards
-            set hidden = false
-            where id = ?1
-            ",
-            (id,)
-        ));
+        L!(("making board \"{}\" visible", b.name) => {
+            un!(self.sql.execute(
+                "
+                update boards
+                set hidden = false
+                where id = ?1
+                ",
+                (id,)
+            ))
+        });
 
         self.get_board(id)
     }
 
     /** make a thread visible */
     pub fn visible_thread(&self, id: i64) -> R<Thread> {
-        let _ = self.get_thread(id)?;
+        let t = self.get_thread(id)?;
 
-        un!(self.sql.execute(
-            "
-            update threads
-            set hidden = false
-            where id = ?1
-            ",
-            (id,)
-        ));
+        L!(("making thread \"{}\"({}) visible", t.name, t.id) => {
+            un!(self.sql.execute(
+                "
+                update threads
+                set hidden = false
+                where id = ?1
+                ",
+                (id,)
+            ));
+        });
 
         self.get_thread(id)
     }
 
     /** make a post visible */
     pub fn visible_post(&self, id: i64) -> R<Post> {
-        let _ = self.get_post(id)?;
+        let p = self.get_post(id)?;
 
-        un!(self.sql.execute(
-            "
-            update posts
-            set hidden = false
-            where id = ?1
-            ",
-            (id,)
-        ));
+        L!(("making post {id} visible (\"{}\")", p.cont) => {
+            un!(self.sql.execute(
+                "
+                update posts
+                set hidden = false
+                where id = ?1
+                ",
+                (id,)
+            ));
+        });
 
         self.get_post(id)
     }
@@ -846,7 +852,7 @@ impl Db {
 
         /* sort by which thread has the most recent post */
         let mut zipped = Vec::new();
-        for t in vec.iter() {
+        for t in vec.into_iter() {
             let mut times = self
                 .get_posts(t.id)?
                 .into_iter()
@@ -855,9 +861,9 @@ impl Db {
             times.sort();
             /* safety */
             if let Some(e) = times.last() {
-                zipped.push((*e, t.clone()));
+                zipped.push((*e, t));
             } else {
-                zipped.push((t.time, t.clone()));
+                zipped.push((t.time, t));
             }
         }
 

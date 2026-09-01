@@ -119,10 +119,15 @@ macro_rules! unh {
 #[macro_export]
 macro_rules! L {
     (($($m:tt)*) => $x:expr) => {{
+        use colored::Colorize;
         use std::{io::Write, fs::{self, OpenOptions}};
         use $crate::pre::*;
 
-        let m = format!("[log][{}]: {}...", timestamp_to_time(now()?), format!($($m)*));
+        let T = timestamp_to_time(now()?);
+        let F = format!($($m)*);
+        macro_rules! Q {()=>{"[log][{}]: {}..."};}
+        let m = format!(Q!(), T, F);
+        let C = format!(Q!(), T.to_string().blue(), F);
 
        let p = &(&*CFG).server.log_file;
        let mut f = if un!(fs::exists(p)) {
@@ -137,14 +142,14 @@ macro_rules! L {
                .open(p))
        };
 
-        puts!("{m}");
+        puts!("{C}");
         if let Err(e) = write!(f, "{m}") {
             eprintln!("couldn't write to log file {p}: {e}");
         }
 
         let r = $x;
 
-        println!("ok");
+        println!("{}", "ok".bold().green());
         if let Err(e) = writeln!(f, "ok") {
             eprintln!("couldn't write ok to log file {p}: {e}");
         }

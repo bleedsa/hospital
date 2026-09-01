@@ -5,10 +5,10 @@ use axum::{
 use axum_cookie::prelude::*;
 use serde::Deserialize;
 
-use crate::{db::Db, pre::*};
+use crate::{db::{Post, Thread, Db}, pre::*};
 
 macro_rules! H {
-    ($v:expr, $T:expr) => {{
+    ($v:expr, $T:expr, $f:expr) => {{
         un!($v)
             .into_iter()
             .map(|q| {
@@ -16,6 +16,7 @@ macro_rules! H {
                     r#"
                     <tr>
                         <td>{q}</td>
+                        <td>{view_file}</td>
                         <td>
                             <div class="unhide-form">
                                 <form method="post" action="/admin/unhide">
@@ -29,6 +30,11 @@ macro_rules! H {
                     "#,
                     T = $T,
                     id = q.id,
+                    view_file = if let Some(fid) = $f(&q) {
+                        format!(r#"<a href="/i/{fid}">view file</a>"#)
+                    } else {
+                        String::new()
+                    },
                 )
             })
             .collect::<String>()
@@ -58,9 +64,9 @@ pub async fn admin(C: CookieManager) -> H<Html<String>> {
             <table class="hidden-table">{hidden_posts}</table>
         </div>
         "#,
-        hidden_boards = H!(db.get_all_hidden_boards(), 'b'),
-        hidden_threads = H!(db.get_all_hidden_threads(), 't'),
-        hidden_posts = H!(db.get_all_hidden_posts(), 'p'),
+        hidden_boards = H!(db.get_all_hidden_boards(), 'b', |_| None::<i64>),
+        hidden_threads = H!(db.get_all_hidden_threads(), 't', |q: &Thread| q.file),
+        hidden_posts = H!(db.get_all_hidden_posts(), 'p', |q: &Post| q.file),
     }))
 }
 
