@@ -3,7 +3,7 @@ use axum::{
     response::{Html, Redirect},
 };
 use axum_cookie::prelude::*;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
 use crate::{
     db::{Db, Post, Thread},
@@ -73,18 +73,19 @@ pub async fn admin(C: CookieManager) -> H<Html<String>> {
     }))
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct UnhideForm {
     pub id: i64,
     pub ty: char,
     pub goto: Option<String>,
+    pub db_path: Option<String>,
 }
 
 pub async fn unhide(
     C: CookieManager,
     Form(f): Form<UnhideForm>,
 ) -> H<Redirect> {
-    let db = Db::new()?;
+    let db = Db::new_opt(f.db_path)?;
     let me = db.me(&C)?;
 
     if !me.admin {
