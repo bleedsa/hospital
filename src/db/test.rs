@@ -548,3 +548,20 @@ fn new_post_is_unread() {
     db.new_post(t.id, u.id, "c", None).unwrap();
     assert!(!db.is_read(u.id, t.id).unwrap());
 }
+
+#[test]
+fn add_user_css() {
+    let db = O("run/test/add_user_css.db");
+    let u = db.new_user("a", "a").unwrap();
+    let txt = "body{color:red;}";
+    let css = db.new_css(u.id, txt).unwrap().unwrap();
+    assert_eq!(&css.css, txt);
+}
+
+#[test]
+fn get_css__no_css() {
+    let db = O("run/test/get_css__no_css.db");
+    let u = db.new_user("a", "a").unwrap();
+    let css = db.get_css(u.id).unwrap();
+    assert_eq!(css, None);
+}

@@ -201,6 +201,23 @@ impl Read {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct Css {
+    pub id: i64,
+    pub user: i64,
+    pub css: String,
+}
+
+impl Css {
+    pub fn new<'a>(r: &Row<'a>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            id: r.get(0)?,
+            user: r.get(1)?,
+            css: r.get(2)?,
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Post {
     pub id: i64,
     pub cont: String,
@@ -343,6 +360,13 @@ impl Db {
                 time integer not null,
                 is_post boolean not null,
                 user integer not null
+            );
+            "#,
+            r#"
+            create table if not exists css (
+                id integer primary key autoincrement,
+                user integer not null,
+                css text not null
             );
             "#,
         ]
@@ -784,9 +808,10 @@ impl Db {
 
         L!(("creating new file") => {
             un!(self.sql.execute(
-                "insert into files (bytes)
+                "
+                insert into files (bytes)
                 values (?1)
-               ",
+                ",
                 (vec,)
             ));
         });
@@ -804,6 +829,42 @@ impl Db {
             re!(f)
         } else {
             err_fmt!("Db::new_file(): file created, but not found")
+        }
+    }
+
+    pub fn new_css<C>(&self, uid: i64, css: C) -> R<Option<Css>>
+    where
+        C: AsRef<str>
+    {
+        let css = css.as_ref();
+
+        L!(("creating new css for user {}: {css}", self.get_user(uid)?.name) => {
+            un!(self.sql.execute(
+                "
+                insert into css (user, css)
+                values (?1, ?2)
+                ",
+                (uid, css),
+            ))
+        });
+
+        self.get_css(uid)
+    }
+
+    pub fn get_css(&self, uid: i64) -> R<Option<Css>> {
+        let r = un!(self.sql.prepare(
+            "
+            select * from css
+            where user = ?1
+            "
+        ))
+            .query_map((uid,), Css::new)
+            .map(|mut i| i.next());
+
+        if let Some(c) = un!(r) {
+            Ok(Some(un!(c)))
+        } else {
+            Ok(None)
         }
     }
 
