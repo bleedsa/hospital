@@ -126,8 +126,8 @@ macro_rules! L {
         let T = timestamp_to_time(now()?);
         let F = format!($($m)*);
         macro_rules! Q {()=>{"[log][{}]: {}..."};}
-        let m = format!(Q!(), T, F);
-        let C = format!(Q!(), T.to_string().blue(), F);
+        let l = format!(Q!(), T, F);
+        let m = format!(Q!(), T.to_string().blue(), F);
 
        let p = &(&*CFG).server.log_file;
        let mut f = if un!(fs::exists(p)) {
@@ -142,8 +142,8 @@ macro_rules! L {
                .open(p))
        };
 
-        puts!("{C}");
-        if let Err(e) = write!(f, "{m}") {
+        puts!("{m}");
+        if let Err(e) = write!(f, "{l}") {
             eprintln!("couldn't write to log file {p}: {e}");
         }
 
