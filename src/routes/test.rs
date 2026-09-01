@@ -46,17 +46,38 @@ where
 
 #[tokio::test]
 async fn login_user_not_found() {
-    let res = login_test(
-        "login_user_not_found",
-        |_| (),
-        |srv| {
-            srv.post("/act/login").form(&LoginForm {
-                user: "A".to_string(),
-                pass: "A".to_string(),
-            })
-        },
-    )
-    .await;
+    let db = O("login_user_not_found");
+
+    let app = U(|r| r);
+    let srv = TestServer::new(app);
+    let res = srv.post("/act/login").form(&LoginForm {
+        user: "A".to_string(),
+        pass: "A".to_string(),
+    }).await;
 
     assert!(res.text().contains("user not found"));
+}
+
+#[tokio::test]
+async fn login_empty_inputs() {
+    for f in [
+        LoginForm {
+            user: String::new(),
+            pass: "A".to_string(),
+        },
+        LoginForm {
+            user: "A".to_string(),
+            pass: String::new(),
+        },
+    ]
+        .into_iter()
+    {
+        let db = O("login_empty_inputs");
+        let app = U(|r| r);
+        let srv = TestServer::new(app);
+        let res = srv.post("/act/login").form(&f).await;
+
+        println!("{}", res.text());
+        assert!(res.text().contains("invalid form parameters"));
+    }
 }
