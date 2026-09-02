@@ -1,7 +1,7 @@
 use axum::{extract::Path, response::Html};
 use axum_cookie::prelude::*;
 
-use crate::{db::Db, pre::*};
+use crate::{db::Db, pre::*, css};
 
 pub async fn by_name(
     C: CookieManager,
@@ -17,12 +17,12 @@ pub async fn by_name(
         <h1>~{name} {admin}</h1>
         <p>{bio}</p>
 
-        <h3>update user info</h3>
+        <h3 class="{hidden_if_not_me}">update user info</h3>
         <form method="post" action="/act/update-user">
             {update}
         </form>
 
-        <h3>update user css</h3>
+        <h3 class="{hidden_if_not_me}">update user css</h3>
         <form method="post" action="/act/update-css">
             {css}
         </form>
@@ -34,6 +34,11 @@ pub async fn by_name(
         },
         name = h!(u.name),
         bio = h!(u.bio),
+        hidden_if_not_me = if me.id == u.id {
+            ""
+        } else {
+            "hidden"
+        },
         /* if the user is me, show a form to update user information */
         update = if me.id == u.id {
             format!(

@@ -1,5 +1,5 @@
-use crate::{db::Db, pre::*};
 use std::{collections::HashMap, fs, path::Path, sync::LazyLock};
+use crate::{db::Db, pre::*};
 
 /** include the default css as a static str. RAWDOG. */
 static DEFAULT_CSS: &str = include_str!("../css/base.css");
@@ -48,7 +48,7 @@ where
         }
     }
 
-    Ok("default")
+    err_fmt!("theme not found!")
 }
 
 pub fn get_theme_names() -> impl Iterator<Item = &'static str> {

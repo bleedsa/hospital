@@ -1109,7 +1109,7 @@ impl Db {
             let o = t.unwrap_or(String::new());
             Ok(o)
         } else {
-            err_fmt!("Db::get_theme({id}): theme not found")
+            Ok("default".to_string())
         }
     }
 

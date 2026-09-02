@@ -16,10 +16,12 @@ async fn main() -> R<()> {
 
     /* create a database just to run the base CREATE commands */
     let db = Db::new()?.init()?;
-    println!("db at {}", db.path);
+    println!("opening database at {:?}", db.path);
 
     /* create the routes */
     let app = Router::new()
+        .route("/style", get(routes::style))
+        .route("/js/base", get(routes::js_base))
         .route("/login", get(routes::login))
         .route("/admin", get(routes::admin::admin))
         .route("/admin/unhide", post(routes::admin::unhide))

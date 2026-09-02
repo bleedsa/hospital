@@ -1,5 +1,6 @@
-use crate::{db::Db, pre::*, tags::tag};
+use crate::{db::Db, pre::*, tags::tag, css, js};
 use axum::response::Html;
+use axum_extra::response::{JavaScript, Css};
 use axum_cookie::CookieManager;
 
 pub mod act;
@@ -32,6 +33,19 @@ pub async fn index(C: CookieManager) -> H<Html<String>> {
         title = (&*CFG).title(),
         tag = tag(),
     }))
+}
+
+/** return the stylesheet */
+pub async fn style(C: CookieManager) -> H<Css<String>> {
+    let db = Db::new()?;
+    let me = if let Ok(x) = db.me(&C) { Some(x.id) } else { None };
+
+    Ok(Css(css::css(&db, me)?))
+}
+
+/** return the base javascript */
+pub async fn js_base(_C: CookieManager) -> H<JavaScript<String>> {
+    Ok(JavaScript(js::base()))
 }
 
 pub async fn login(C: CookieManager) -> H<Html<String>> {

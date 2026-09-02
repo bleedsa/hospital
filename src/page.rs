@@ -22,7 +22,7 @@ macro_rules! page {
 
     ($db:expr, $me:expr, { ($($t:tt)*), $($b:tt)* }) => {{
         use axum::response::Html;
-        use $crate::{pre::*, css, js};
+        use $crate::pre::*;
 
         Html(format!(
             r#"
@@ -31,7 +31,8 @@ macro_rules! page {
                 <head>
                     <title>{title} :: {site_title}</title>
                     <meta charset="utf-8">
-                    <style>{css}</style>
+                    <link rel="stylesheet" href="/style" type="text/css">
+                    <script src="/js/base" async></script>
                 </head>
 
                 <body>
@@ -52,15 +53,11 @@ macro_rules! page {
                         (c)<a href="http://badboy.institute/~skye" target="_blank">skylar bleed</a> 2026|<a href="https://raw.githubusercontent.com/bleedsa/hospital/refs/heads/master/LICENSE" target="_blank">Mozilla Public License/2.0</a>|<a href="https://github.com/bleedsa/hospital" target="_blank">view source</a>
                     </div>
                 </body>
-
-                <script>{js}</script>
             </html>
             "#,
             site_title = (&*CFG).title(),
             title = format!($($t)*),
             body = format!($($b)*),
-            css = css::css(&$db, $me)?,
-            js = js::base(),
             login_user = if let Some(id) = $me {
                 format!(r#"<a href="/u/~{n}">~{n}</a>"#, n = un!($db.get_user(id)).name)
             } else {

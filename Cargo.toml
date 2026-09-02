@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 default-run = "hospital"
 
+[lib]
+doctest = false
+
 [[bin]]
 name = "hospital"
 test = false
@@ -16,7 +19,6 @@ path = "bin/new_admin.rs"
 
 [[bin]]
 name = "new_user"
-test = false
 path = "bin/new_user.rs"
 
 [[bin]]
