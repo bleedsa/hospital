@@ -21,6 +21,7 @@ pub async fn login(C: CookieManager, Form(f): Form<LoginForm>) -> H<Redirect> {
 
     /* make a db and get the user from the form */
     let db = Db::new_opt(f.db_path)?;
+    println!("{}", db.path);
     let u = db.get_user_by_name(&f.user)?;
 
     /* check the password */

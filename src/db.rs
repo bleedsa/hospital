@@ -298,7 +298,7 @@ impl Db {
 
     #[inline(always)]
     pub fn new() -> R<Self> {
-        db_path(|p| Self::create(p))
+        Db::create(&(&*CFG).server.db)
     }
 
     pub fn new_opt<P>(o: Option<P>) -> R<Self>

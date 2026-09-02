@@ -15,7 +15,8 @@ async fn main() -> R<()> {
     let addr = format!("{}:{}", cfg.server.ip, cfg.server.port);
 
     /* create a database just to run the base CREATE commands */
-    let _ = Db::new()?.init()?;
+    let db = Db::new()?.init()?;
+    println!("db at {}", db.path);
 
     /* create the routes */
     let app = Router::new()

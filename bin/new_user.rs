@@ -16,6 +16,7 @@ struct Args {
 fn main() -> R<()> {
     let A = Args::parse();
     let db = Db::new()?.init()?;
+    db_path(|p| Ok(println!("\"{}\"", p)))?;
 
     let u = db.new_user(&A.user, &A.password)?;
     println!("{u:#?}");
