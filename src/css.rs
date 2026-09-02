@@ -36,7 +36,7 @@ pub static THEMES: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
 });
 
 #[inline(always)]
-pub fn get_theme<N>(n: N) -> R<&'static str>
+pub fn get_theme<N>(n: N) -> Option<&'static str>
 where
     N: AsRef<str>,
 {
@@ -44,11 +44,11 @@ where
 
     for (k, f) in &*THEMES {
         if &n == k {
-            return Ok(&f);
+            return Some(&f);
         }
     }
 
-    err_fmt!("theme not found!")
+    None
 }
 
 pub fn get_theme_names() -> impl Iterator<Item = &'static str> {
@@ -58,7 +58,7 @@ pub fn get_theme_names() -> impl Iterator<Item = &'static str> {
 /** get the css stylesheet as a string to inject into <style> in page!{} */
 pub fn css(db: &Db, me: Option<i64>) -> R<String> {
     let (t, vars, body) = if let Some(id) = me {
-        let t = get_theme(db.get_theme(id)?)?;
+        let t = get_theme(db.get_theme(id)?).unwrap_or("");
         let css = db.get_css(id)?;
         if let Some(css) = css {
             (t, css.vars, css.css)

@@ -1294,8 +1294,8 @@ impl Db {
         let t = t.as_ref();
         let u = self.get_user(id)?;
 
-        if let Err(e) = css::get_theme(t) {
-            return err_fmt!("failed to get theme \"{t}\": {e}");
+        if let None = css::get_theme(t) {
+            return err_fmt!("failed to get theme \"{t}\": theme not found!");
         }
 
         L!(("setting {}'s theme to {t}", u.name) => {
