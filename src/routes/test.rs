@@ -5,7 +5,6 @@ use cookie::Cookie;
 
 use crate::{
     db::Db,
-    pre::*,
     routes::{self, act::LoginForm, admin::UnhideForm},
 };
 use std::fs;
@@ -16,8 +15,6 @@ fn O(p: &str) -> (Db, Option<String>) {
     if fs::exists(&p).unwrap() {
         fs::remove_file(&p).unwrap();
     }
-
-    set_db_path(p.clone()).unwrap();
 
     (Db::create(p.clone()).unwrap().init().unwrap(), Some(p))
 }
