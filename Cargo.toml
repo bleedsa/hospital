@@ -59,6 +59,11 @@ name = "dump_admins"
 test = false
 path = "bin/dump_admins.rs"
 
+[[bin]]
+name = "dump_users"
+test = false
+path = "bin/dump_users.rs"
+
 [dependencies]
 argon2 = { version = "0.6.0", features = ["rand_core"] }
 axum = { version = "0.8.9", features = ["macros", "multipart"] }
