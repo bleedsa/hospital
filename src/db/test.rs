@@ -576,3 +576,13 @@ fn get_css__several_css() {
     let css = db.new_css(u.id, "", "test2").unwrap().unwrap();
     assert_eq!(&css.css, "test2");
 }
+
+#[test]
+fn set_board_name() {
+    let db = O("run/test/set_board_name.db");
+    let b = db.new_board("a", "a").unwrap();
+    db.update_board_name(b.id, "b").unwrap();
+    let b = db.get_board(b.id).unwrap();
+
+    assert_eq!(&b.name, "b");
+}

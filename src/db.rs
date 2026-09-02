@@ -1312,6 +1312,27 @@ impl Db {
         Ok(())
     }
 
+    pub fn update_board_name<N>(&self, id: i64, n: N) -> R<()>
+    where
+        N: AsRef<str>
+    {
+        let n = n.as_ref();
+        let b = self.get_board(id)?;
+
+        L!(("updating board \"{}\"'s name to {n}", b.name) => {
+            un!(self.sql.execute(
+                "
+                update boards
+                set name = ?1
+                where id = ?2
+                ",
+                (n, id)
+            ));
+        });
+
+        Ok(())
+    }
+
     pub fn rm_admin(&self, id: i64) -> R<()> {
         un!(self.sql.execute(
             "
