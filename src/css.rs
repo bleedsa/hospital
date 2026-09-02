@@ -48,7 +48,7 @@ where
         }
     }
 
-    err_fmt!("theme \"{n}\" not found (no {}/{})", (&*CFG).site.themes, n)
+    Ok("default")
 }
 
 pub fn get_theme_names() -> impl Iterator<Item = &'static str> {
